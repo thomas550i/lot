@@ -193,7 +193,7 @@ func SaveClientUser(w http.ResponseWriter, r *http.Request){
 	<h4>Welcome to DataLot `+p.Firstname +""+p.Lastname +` Your Token Number <h1>`+Simpletoken+`<h1> Enjoy Datalot !<h4>`
 	
 	if p.Username!=""{
-		if Sendmail,errprs:=SendMailRegisterUser("thomas550i@gmail.com","ubendranv91@gmail.com","testmail",MailBody,"");!Sendmail{
+		if Sendmail,errprs:=SendMailRegisterUser("thomas550i@gmail.com",p.Username,"Welcome To DATALOT",MailBody,"");!Sendmail{
 			fmt.Println("SMTP ERROR",errprs)
 			c.ResFail(w, nil, "FAILED IN SMTP TO SEND MAIL")
 			return	
