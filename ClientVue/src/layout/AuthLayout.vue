@@ -1,11 +1,12 @@
 <template>
-  <Header/>
   <div>
-      <router-view>
-          
-      </router-view>
+      <Header/>
+          <router-view>
+              
+          </router-view>
+      
+      <Footer/>
   </div>
-  <Footer/>
 </template>
 <script>
 import Footer from "./Footer.vue"

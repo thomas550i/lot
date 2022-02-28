@@ -1,21 +1,34 @@
-import { createApp } from 'vue'
-import App from './App.vue'
-import router from "./router";
-import RequiredComponents from "./Plugins/RequiredComponents";
-import axios from 'axios'
-import VueAxios from 'vue-axios'
-import VueSweetalert2 from 'vue-sweetalert2';
-import 'sweetalert2/dist/sweetalert2.min.css';
-import VueDatepickerUi from 'vue-datepicker-ui'
-import 'vue-datepicker-ui/lib/vuedatepickerui.css';
-import VueToast from 'vue-toast-notification';
-import 'vue-toast-notification/dist/theme-sugar.css';
+// The Vue build version to load with the `import` command
+// (runtime-only or standalone) has been set in webpack.base.conf with an alias.
+import Vue from 'vue';
+import Axios from 'axios'
+import App from './App';
+import helper from "./Plugins/helper";
+import router from './router';
+import swal from 'sweetalert2';
+window.swal = swal;
+import InputBase from "./components/Input";
+import VeeValidate from 'vee-validate'
+import PasswordMeter from "vue-simple-password-meter";
+import { library } from '@fortawesome/fontawesome-svg-core';
+import { faEye,faEyeSlash } from '@fortawesome/free-solid-svg-icons';
+library.add(faEye,faEyeSlash);
+import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome'
+Vue.use(VeeValidate);
+Vue.component("Password",PasswordMeter);
+Vue.component("Icons",FontAwesomeIcon);
+Vue.component("InputBase",InputBase)
 
-const appInstance = createApp(App);
-appInstance.use(router);
-appInstance.use(RequiredComponents);
-appInstance.mount("#app");
-appInstance.use(VueAxios, axios)
-appInstance.use(VueSweetalert2);
-appInstance.component('Datepicker', VueDatepickerUi)
-appInstance.use(VueToast);
+Vue.prototype.axios = Axios
+Vue.prototype.helper = helper
+
+Vue.config.productionTip = false
+
+
+/* eslint-disable no-new */
+new Vue({
+  el: '#app',
+  router,
+  components: { App },
+  template: '<App/>'
+})

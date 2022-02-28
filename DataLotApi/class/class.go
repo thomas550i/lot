@@ -69,6 +69,17 @@ type Users struct {
 	Password  string
 }
 
+type ClientUsers struct{
+	Lastname  string
+	Firstname string
+	Username  string
+	Email     string
+	Gender    string
+	Roalval   string
+	IsActive  string
+	Password  string
+}
+
 type Show struct {
 	ID       int64
 	Time     string

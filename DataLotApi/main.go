@@ -15,6 +15,10 @@ func main() {
 	http.HandleFunc("/users/login", handlers.IndexHandler)
 	http.HandleFunc("/users/getusers", handlers.GetUsers)
 	http.HandleFunc("/users/saveuser", handlers.Saveuser)
+	http.HandleFunc("/users/saveclientuser", handlers.SaveClientUser)
+	http.HandleFunc("/users/checkduplicatemail", handlers.CheckClientDuplicateMail)
+	http.HandleFunc("/users/processotpuser", handlers.ProcessOtpUser)
+
 	http.HandleFunc("/users/deleteuser", handlers.DeleteUser)
 	http.HandleFunc("/users/updateuser", handlers.Updateuser)
 

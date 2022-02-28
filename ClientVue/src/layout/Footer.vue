@@ -1,4 +1,5 @@
 <template>
+ <div>
  <div class="container-fluid bg-blue footer text-white">
                 <div class="row">
                     <div class="container">
@@ -200,7 +201,9 @@
                         </div>
                     </div>
                 </div>
-            </div> 
+            </div>
+</div>
+ </div> 
 </template>
 
 <script>

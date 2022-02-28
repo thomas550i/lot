@@ -7,7 +7,7 @@ export default {
     checklogin(){
         var d = localStorage.getItem("UI");
         if (d===null || d==""){
-           window.location.href = "http://localhost:8080/#/login"
+           window.location.href = "http://localhost:8081/#/login"
            return false
             
         } else {
@@ -18,7 +18,7 @@ export default {
             console.log(time.getTime())
             console.log(current.getTime())
             if (time.getTime()<=current.getTime()){
-                window.location.href = "http://localhost:8080/#/login";
+                window.location.href = "http://localhost:8081/#/login";
                 return false
             } else {
                 this.UR = uinfo.Roalval

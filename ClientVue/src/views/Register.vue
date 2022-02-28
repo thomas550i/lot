@@ -1,4 +1,6 @@
 <template>
+    <div>
+    <Header/>
     <div class="container">
             
             <!-- 
@@ -71,282 +73,105 @@
                                             </div>
                                             <div id="bankTransrerColl" class="panel-collapse collapse in">
                                                 <div class="panel-body">
-                                                    <form class="form-horizontal">
+                                                    <form class="form-horizontal" v-if="OtpCreated==false">
+                                                        
+                                                        
                                                         
                                                         <div class="form-group pd-none">
-                                                            <label for="frName" class="col-sm-3 control-label text-darkness">Your first name</label>
+                                                            <label for="Firstlogid" class="col-sm-3 control-label text-darkness">Your First Name</label>
                                                             <div class="col-sm-8">
-                                                                <input type="text"
-                                                                       class="form-control"
-                                                                       id="frName">
+                                                                <input type="text" id="Firstlogid" name="Firstlogid"  v-model="FirstName" v-validate="'required|max:30'" :class="{'form-control': true, 'danger': errors.has('Firstlogid') }" placeholder="FirstName">
                                                             </div>
-                                                        </div>
-                                                        
-                                                        <div class="form-group pd-none">
-                                                            <label for="lnName" class="col-sm-3 control-label text-darkness">Your last name</label>
-                                                            <div class="col-sm-8">
-                                                                <input type="text"
-                                                                       class="form-control"
-                                                                       id="lnName">
-                                                            </div>
-                                                        </div>
-                                                        
-                                                        <div class="form-group pd-none">
-                                                            <label for="slLogin" class="col-sm-3 control-label text-darkness">Select login</label>
-                                                            <div class="col-sm-8">
-                                                                <input type="text"
-                                                                       class="form-control"
-                                                                       id="slLogin">
-                                                            </div>
-                                                        </div>
-                                                        
-                                                        <div class="form-group pd-none">
-                                                            <label for="email" class="col-sm-3 control-label text-darkness">Enter your email</label>
-                                                            <div class="col-sm-8">
-                                                                <input type="email"
-                                                                       class="form-control"
-                                                                       id="email">
-                                                            </div>
-                                                        </div>
-                                                        
-                                                        <div class="form-group pd-none">
-                                                            <label for="password" class="col-sm-3 control-label text-darkness">Enter your password</label>
-                                                            <div class="col-sm-8">
-                                                                <input type="password"
-                                                                       class="form-control"
-                                                                       id="password">
-                                                            </div>
-                                                        </div>
-                                                    </form>
-                                                </div>
-                                            </div>
-                                        </div>
-                                        
-                                        <div class="panel panel-default">
-                                            <div class="panel-heading" id="addressSet">
-                                                <h4 class="panel-title">
-                                                    <a class="collapsed" data-toggle="collapse" data-parent="#accordion" href="#collapseTwo">
-                                                        <span class="panel-indicator"></span>
-                                                        Address settings
-                                                    </a>
-                                                </h4>
-                                            </div>
-                                            <div id="collapseTwo" class="panel-collapse collapse">
-                                                <div class="panel-body">
-                                                                      
-                                                    <form class="form-horizontal">
-                                                        
-                                                        <!-- Authocompille -->
-                                                        <div class="form-group pd-bottom">
-                                                            <label for="autocomplete" class="col-sm-2 control-label">Address</label>
-                                                            <div class="col-sm-10">
-                                                                <input type="text"
-                                                                       class="form-control"
-                                                                       id="autocomplete"
-                                                                       placeholder="Enter your address"
-                                                                       onFocus="geolocate()">
+                                                            <div v-show="errors.has('Firstlogid')" class="row text-danger text-center" style="font-size:small" >
+                                                                 {{"First Name is Required"}}
                                                             </div>
                                                         </div>
 
-                                                        <div class="form-group pd-none">
-                                                            <label for="route" class="col-sm-3 control-label text-darkness">Street address</label>
-                                                            <div class="col-sm-6">
-                                                                <input type="text"
-                                                                       class="form-control"
-                                                                       id="route"
-                                                                       disabled>
-                                                            </div>
-                                                            <div class="col-sm-2">
-                                                                <input type="text"
-                                                                       class="form-control"
-                                                                       id="street_number"
-                                                                       disabled>
-                                                            </div>
-                                                        </div>
 
                                                         <div class="form-group pd-none">
-                                                            <label for="locality" class="col-sm-3 control-label text-darkness">City</label>
+                                                            <label for="lastNameid" class="col-sm-3 control-label text-darkness">Your Last name</label>
                                                             <div class="col-sm-8">
-                                                                <input type="text"
-                                                                       class="form-control"
-                                                                       id="locality"
-                                                                       disabled>
+                                                                <input type="text" id="lastNameid" name="lastNameid"  v-model="LastName" v-validate="'required'" :class="{'form-control': true, 'danger': errors.has('lastNameid') }" placeholder="LastName">
                                                             </div>
+                                                            <div v-show="errors.has('lastNameid')" class="text-danger text-center" style="font-size:small" >{{ "Last Name Required" }}</div>
                                                         </div>
-
-                                                        <div class="form-group pd-none">
-                                                            <label for="administrative_area_level_1" class="col-sm-3 control-label text-darkness">State</label>
-                                                            <div class="col-sm-8">
-                                                                <input type="text"
-                                                                       class="form-control"
-                                                                       id="administrative_area_level_1"
-                                                                       disabled>
-                                                            </div>
-                                                        </div>
-
-                                                        <div class="form-group pd-none">
-                                                            <label for="postal_code" class="col-sm-3 control-label text-darkness">Zip code</label>
-                                                            <div class="col-sm-8">
-                                                                <input type="text"
-                                                                       class="form-control"
-                                                                       id="postal_code"
-                                                                       disabled>
-                                                            </div>
-                                                        </div>
-
-                                                        <div class="form-group pd-none">
-                                                            <label for="country" class="col-sm-3 control-label text-darkness">Country</label>
-                                                            <div class="col-sm-8">
-                                                                <input type="text"
-                                                                       class="form-control"
-                                                                       id="country"
-                                                                       disabled>
-                                                            </div>
-                                                        </div>
-                                                        <!-- / Authocompille -->
                                                         
-                                                        <div class="form-group pd-sm">
-                                                            <div class="col-sm-offset-3 col-sm-7">
-                                                                <div class="checkbox padding">
-                                                                    <input type="checkbox" id="chackAddress" checked>
-                                                                    <label for="chackAddress">
-                                                                        <span class="checkbox-input">
-                                                                            <span class="off">yes</span>
-                                                                            <span class="on">no</span>
-                                                                        </span>
-                                                                        this delively addres is valid
-                                                                    </label>
+                                                        
+                                                        <div class="form-group pd-none">
+                                                            <label for="emailidreg" class="col-sm-3 control-label text-darkness">Enter your email</label>
+                                                            <div class="col-sm-8">
+                                                                <input type="email" name="emailidreg" v-model="Emailreg" v-validate="'required|email'" :class="{'form-control': true, 'danger': errors.has('emailidreg') }" placeholder="Enter your Email" id="emailidreg">
+                                                            </div>
+
+                                                            <div v-show="errors.has('emailidreg')" class="text-danger text-center" style="font-size:small">{{ "Email ID Must Be Valid" }} <br/></div>
+                                                        </div>
+                                                        <div class="form-group pd-none">
+                                                            <label for="Genderid" class="col-sm-3 control-label text-darkness">Gender</label>
+                                                            <div class="col-sm-8">
+                                                                <select v-model="Gender" class="form-select col-sm" v-validate="'required'" name="Genderid" id="Genderid">
+                                                                    <option value="" selected>Select</option>
+                                                                    <option value="M">Male</option>
+                                                                    <option value="F">FeMale</option>
+                                                                </select>
+                                                            </div>
+                                                            <div v-show="errors.has('Genderid')" class="text-danger text-center" style="font-size:small">{{ "Gender required" }} <br/></div>
+                                                        </div>
+                                                        <div class="form-group pd-none">
+                                                            <label for="passwordregid" class="col-sm-3 control-label text-darkness">Enter your password</label>
+                                                            <div class="col-sm-8">
+                                                                <div class="row">
+                                                                    <div class="col-sm-10">
+                                                                        <input  :type="PasswordHide?'password':'text'" name="passwordregid" v-model="Passwordreg" v-validate="'required'" :class="{'form-control': true, 'danger': errors.has('passwordregid') }" placeholder="Enter your Password" id="passwordregid">
+                                                                    </div>
+                                                                    <div class="col-md-2" style="margin-top:10px">
+                                                                        <Icons style="width:50%;height:50%;" :icon="PasswordHide?'eye-slash':'eye'" @click="hideShow()" />
+                                                                    </div>
+                                                                    <div v-show="errors.has('passwordregid')" class="text-danger text-center" style="font-size:small">{{ "Password is required" }} <br/></div>
+                                                                </div>
+
+                                                                <div class="row">
+                                                                    <Password :password="Passwordreg"/>
                                                                 </div>
                                                             </div>
                                                         </div>
-
-                                                    </form>
-                                                    
-                                                    
-                                                </div>
-                                            </div>
-                                        </div>
-                                        
-                                        <div class="panel panel-default">
-                                            <div class="panel-heading" id="headingTwo">
-                                                <h4 class="panel-title">
-                                                    <a class="collapsed" data-toggle="collapse" data-parent="#accordion" href="#creditCard">
-                                                        <span class="panel-indicator"></span>
-                                                        Credit card payment
-                                                    </a>
-                                                </h4>
-                                            </div>
-                                            <div id="creditCard" class="panel-collapse collapse">
-                                                <div class="panel-body">
-                                                   
-                                                    <div class="col-xs-2">
-                                                        
+                                                        <br/>
                                                         <div class="form-group pd-none">
-                                                            <div class="checkbox vers-2 pd-none">
-                                                                <input type="radio" name="group1" id="item-check-1">
-                                                                <label for="item-check-1">
-                                                                    <i class="icofont icofont-check-alt"></i>
-                                                                    <span class="text-icon icofont icofont-american-express"></span>
-                                                                </label>
-                                                            </div>
-                                                        </div>
-                                                        
-                                                        <div class="form-group pd-none">
-                                                            <div class="checkbox vers-2 pd-none">
-                                                                <input type="radio" name="group1" id="item-check-2">
-                                                                <label for="item-check-2">
-                                                                    <i class="icofont icofont-check-alt"></i>
-                                                                    <span class="text-icon icofont icofont-visa"></span>
-                                                                </label>
-                                                            </div>
-                                                        </div>
-                                                        
-                                                        <div class="form-group pd-none">
-                                                            <div class="checkbox vers-2 pd-none">
-                                                                <input type="radio" name="group1" id="item-check-3">
-                                                                <label for="item-check-3">
-                                                                    <i class="icofont icofont-check-alt"></i>
-                                                                    <span class="text-icon icofont icofont-mastercard"></span>
-                                                                </label>
-                                                            </div>
-                                                        </div>
-                                                    </div>
-
-                                                    <div class="col-xs-10 col-sm-5">
-                                                        <div class="form-group">
-                                                            <label for="cardHolder">Card holder first name</label>
-                                                            <input type="password" class="form-control" id="cardHolder">
-                                                        </div>
-                                                    </div>
-
-                                                    <div class="col-xs-10 col-sm-5">
-                                                        <div class="form-group">
-                                                            <label for="cardHolderLast">Card holder last name</label>
-                                                            <input type="password" class="form-control" id="cardHolderLast">
-                                                        </div>
-                                                    </div>
-
-                                                    <div class="col-xs-10 col-sm-6">
-                                                        <div class="form-group">
-                                                            <label for="cardNum">Card number</label>
-                                                            <input type="password" class="form-control" id="cardNum">
-                                                        </div>
-                                                    </div>
-
-                                                    <div class="col-xs-5 col-sm-2">
-                                                        <div class="form-group">
-                                                            <label for="expiryDate">Expiry Date</label>
-                                                            <input type="password" class="form-control" id="expiryDate">
-                                                        </div>
-                                                    </div>
-
-                                                    <div class="col-xs-5 col-sm-2">
-                                                        <div class="form-group">
-                                                            <label for="cvc">CVV/CVC</label>
-                                                            <input type="password" class="form-control" id="cvc">
-                                                        </div>
-                                                    </div>
-
-                                                    <div class="col-xs-12">
-                                                        <div class="form-group row">
-                                                            <div class="col-sm-offset-2 col-sm-8">
-                                                                <button type="button" class="btn btn-primary btn-material"> 
-                                                                    <span class="body">Save method</span>
-                                                                    <i class="icon icofont icofont-check-circled"></i>
-                                                                </button>
-                                                            </div>
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        </div>
-                                        
-                                        <div class="panel panel-default">
-                                            <div class="panel-heading" id="headingOne">
-                                                <h4 class="panel-title">
-                                                    <a class="collapsed" data-toggle="collapse" data-parent="#accordion" href="#payPall">
-                                                        <span class="panel-indicator"></span>
-                                                        PayPal account
-                                                    </a>
-                                                </h4>
-                                            </div>
-                                            <div id="payPall" class="panel-collapse collapse">
-                                                <div class="panel-body">
-                                                    <form class="form-horizontal">
-                                                        <div class="form-group pd-none">
-                                                            <label for="PayPal" class="col-sm-3 control-label text-darkness">PayPal account</label>
+                                                            <label for="passwordregid" class="col-sm-3 control-label text-darkness">Confirm your password</label>
                                                             <div class="col-sm-8">
-                                                                <input type="text"
-                                                                       class="form-control"
-                                                                       id="PayPal">
+                                                                <div class="row">
+                                                                    <div class="col-sm-10">
+                                                                        <input  :type="ConfirmPasswordHide?'password':'text'" name="confirmpasswordregid" v-model="ConfirmPasswordreg" v-validate="'required|max:60'" :class="{'form-control': true, 'danger': errors.has('confirmpasswordregid') }" placeholder="Enter your Password" id="passwordregid">
+                                                                    </div>
+                                                                    <div class="col-md-2" style="margin-top:10px">
+                                                                        <Icons style="width:50%;height:50%;" :icon="ConfirmPasswordHide?'eye-slash':'eye'" @click="ConfirmhideShow()" />
+                                                                    </div>
+                                                                    <div v-show="errors.has('confirmpasswordregid')" class="text-danger text-center" style="font-size:small">{{ "Password is required" }} <br/></div>
+                                                                </div>
+                                                                <div class="row">
+                                                                    <Password :password="ConfirmPasswordreg"/>
+                                                                </div>
+                                                                <div class="row" v-if="ConfirmandPassnotequal">{{"Confirm Password Does not match"}}</div>
                                                             </div>
                                                         </div>
-
-                                                        <div class="form-group">
-                                                            <div class="col-sm-offset-3 col-sm-7">
-                                                                <a href="#" class="sdw-hover btn btn-material btn-yellow ripple-cont">Next</a>
+                                                        <span class="sdw-wrap" style="margin-left:30%;">
+                                                            <button @click="ProcessRegister()" type="button" class="sdw-hover btn btn-material btn-yellow btn-lg ripple-cont">Submit</button>
+                                                            <span class="sdw"></span>
+                                                        </span>
+                                                    </form>
+                                                    <form class="form-horizontal" v-if="OtpCreated">
+                                                        <div class="form-group pd-none">
+                                                            <label for="OtpSubmit" class="col-sm-3 control-label text-darkness">One Time Password</label>
+                                                            <div class="col-sm-8">
+                                                                <input type="text" id="OtpSubmit" name="OtpSubmit"  v-model="OtpValue" v-validate="'required|max:30'" :class="{'form-control': true, 'danger': errors.has('OtpSubmit') }" placeholder="Enter Your OTP">
+                                                            </div>
+                                                            <div v-show="errors.has('OtpSubmit')" class="row text-danger text-center" style="font-size:small" >
+                                                                 {{"OTP is Required"}}
                                                             </div>
                                                         </div>
+                                                        <span class="sdw-wrap" style="margin-left:30%;">
+                                                            <button @click="ProcessotpUser()" type="button" class="sdw-hover btn btn-material btn-yellow btn-lg ripple-cont">Submit</button>
+                                                            <span class="sdw"></span>
+                                                        </span>
                                                     </form>
                                                 </div>
                                             </div>
@@ -360,24 +185,142 @@
                 
             </div>
             <!-- END: CONTENT -->
+      
             
         </div>
+        <Footer/>
+    </div>
 </template>
 <script>
+import Footer from "../layout/Footer.vue"
+import Header from "../layout/header.vue"
 export default {
   name: "Register",
+  components:{
+      Footer:Footer,
+      Header:Header,
+  },
   data() {
     return {
-      model: {
-        name: "",
-        email: "",
-        password: "",
-      },
+      FirstName: "",
+      OtpCreated:false,
+      OtpValue:"",
+      LastName:"",
+      Emailreg: "",
+      Gender:"",
+      Passwordreg: "",
+      PasswordHide:true,
+      ConfirmPasswordreg:"",
+      ConfirmPasswordHide:true,
+      ConfirmandPassnotequal:false
     };
   },
   created(){
-      console.log("PASSING ISNDE THE COND")
-  }
+      console.log("PASSING INSDE ");
+  },
+  methods:{
+    hideShow(){
+        this.PasswordHide=!this.PasswordHide
+    },
+    ConfirmhideShow(){
+        this.ConfirmPasswordHide=!this.ConfirmPasswordHide
+    },
+    ProcessRegister(){
+        console.log("PASSING INSIDE ");
+        let CheckDuplicateMail = (x)=>{
+            return new Promise((resolve,reject)=>{
+                let parameter = {
+                "Email":this.Emailreg,
+            };
+            let Actionurl="users/checkduplicatemail"
+            this.axios.post(this.helper.SERVICEURL+Actionurl, parameter).then(response => {
+            if(response.data.Success){
+                resolve({message:response.data.Message})
+            }  else {
+               resolve({message:response.data.Message})
+            }     
+          });
+            })
+        }
+        let BasicValidation=()=>{
+            let check = true
+            if(!(this.ConfirmPasswordreg==this.Passwordreg)){
+                this.ConfirmandPassnotequal = true
+                check=false
+            }
+
+            if(check){
+                this.$validator.validateAll().then((result)=>{
+                    if(result){
+                        CheckDuplicateMail(this.Emailreg).then((x)=>{
+                            if(x.message!=undefined && x.message=="Email ID Already Exists"){
+                                this.SaveUserdata()
+                                console.log("PASSING INSIDE THE CHECKDUPLICATE MAIL")
+                            }else if(x.message!=undefined && x.message=="Already Exists but not Completed"){
+                                this.OtpCreated=true
+                            }else{
+                                swal.fire({
+                                    icon: 'error',
+                                    title: 'Email Duplicate',
+                                    text: x.message,
+                                })
+                            }
+                        })
+                    }else{
+                        swal.fire({
+                            icon: 'error',
+                            title: 'Oops..',
+                            text: "Check Exisiting Fields ...",
+                        })
+                    }
+                })
+            }
+            
+        }
+        BasicValidation();
+    },
+    SaveUserdata(){
+            let parameter = {
+                "Username":this.Emailreg,
+                "Password":this.Passwordreg,
+                "Firstname":this.FirstName,
+                "Lastname":this.LastName,
+                "Gender":this.Gender,
+            };
+            let Actionurl="users/saveclientuser"
+            parameter.Password = btoa(parameter.Password)
+            this.axios.post(this.helper.SERVICEURL+Actionurl, parameter).then(response => {
+            if(response.data.Success){
+                this.OtpCreated=true
+            }  else {
+               swal.fire({
+                    icon: 'error',
+                    title: 'Oops..',
+                    text: response.data.Message,
+                  })
+            }     
+          });
+    },
+    ProcessotpUser(){
+        this.helper.ProcessOTPUSER(this.Emailreg,this.OtpValue).then((x)=>{
+            if(x.message=="Success"){
+                swal.fire({
+                icon: 'success',
+                title: 'OTP SUCCESS',
+                text: "OTP APPROVED",
+                })
+                this.$router.push("/");
+            }else{
+                swal.fire({
+                    icon: 'error',
+                    title: 'OTP',
+                    text: x.message,
+                  })
+            }
+        })
+    }
+
+  },
 };
 </script>
 <style>
