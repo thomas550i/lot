@@ -1,31 +1,10 @@
+import { faSortAlphaDownAlt } from "@fortawesome/free-solid-svg-icons";
+
 import Axios from "axios"
 export default {
     SERVICEURL:"http://localhost:8111/",
     setUserinfo(user){
-        user.sstime = new Date(new Date(new Date().setHours(new Date().getHours() + 2)))
         localStorage.setItem("UI", JSON.stringify(user));
-    },
-    checklogin(){
-        var d = localStorage.getItem("UI");
-        if (d===null || d==""){
-           window.location.href = "http://localhost:8080/#/login"
-           return false
-            
-        } else {
-            var uinfo = JSON.parse(d)
-            var time = new Date(uinfo.sstime)
-            
-            var current = new Date()
-            console.log(time.getTime())
-            console.log(current.getTime())
-            if (time.getTime()<=current.getTime()){
-                window.location.href = "http://localhost:8080/#/login";
-                return false
-            } else {
-                this.UR = uinfo.Roalval
-                this.UserInfo =uinfo
-            }
-        }
     },
     getuserinfo(){
         var d = localStorage.getItem("UI");
@@ -52,6 +31,16 @@ export default {
           });
         })
     },
-    UserInfo:"",
-    UR:""
+    SessionExpire(){
+       window.swal.fire({
+            icon: 'warning',
+            title: 'OTP',
+            text: "Session Expired",
+        }) 
+        this.ClearlocalStorage("UI");
+        this.$router.push("/");
+    },
+    ClearlocalStorage(key){
+        localStorage.removeItem(key);
+    },
 }

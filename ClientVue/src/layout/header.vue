@@ -20,18 +20,21 @@
             
             <!-- Top panel / search / phone -->
             <div class="top-panel">
-                <div class="btn-cols">
+                <div v-if="!isLogin" class="btn-cols">
                     
                     <ul class="list-btn-group">
-                      <li><a href="#Login" data-toggle="modal" data-target="#myModal">Sing In</a></li>
+                      <li><a href="#Login" data-toggle="modal" data-target="#myModal">Sign In</a></li>
                         <router-link :to="'/Register'"><li><a style="margin-left:5px;">Sign Up</a></li></router-link>
                     </ul>
                 </div>
+                <div v-if="isLogin" class="btn-cols">
+                    
+                    <ul class="list-btn-group">
+                      <li><a @click="Logout">Logout</a></li>
+                    </ul>
+                </div>
             </div>
-            
-            <ul class="nav navbar-nav navbar-right info-panel">
-                
-                <!-- Profile -->
+            <ul v-if="!isLogin" class="nav navbar-nav navbar-right info-panel">
                 <li class="profile">
                     <span class="wrap">
                         
@@ -47,12 +50,10 @@
 
                             <!--img src="images/profile/profile-img.jpg" alt=""-->
                         </span>
-                        
                         <!-- Info -->
                         <span class="info">
                             <!-- Name -->
                             <span class="name text-uppercase">John Doe</span>
-                            <a href="#">edit profile</a>
                         </span>
                     </span>
                 </li>
@@ -187,8 +188,8 @@
                                       
                     </ul>
                 </li>
-            </ul>
-        
+            </ul> 
+            <UserProfile v-if="isLogin"/>
             <ul class="nav navbar-nav">
                 <li class="active">
                     <a href="index.html">
@@ -272,42 +273,31 @@
                             </div>
 
                             <div class="col-md-5 col-md-offset-1 form-fields">
-                                <form>
+                                <form v-if="!OTPcreated">
                                      
                                      <div class="form-group">
                                         <label for="emailid">Email</label>
-                                        <input id="emailid" name="emailid" v-model="Email" v-validate="'required|email'" :class="{'form-control': true, 'danger': errors.has('email') }" type="text" placeholder="Email">
+                                        <input id="emailid" name="emailid" v-model="Email" v-validate="'email|required'" :class="{'form-control': true, 'danger': errors.has('email') }" type="text" placeholder="Email">
                                         <i v-show="errors.has('emailid')" class="fa fa-warning"></i>
                                      </div>
                                      <span v-show="errors.has('emailid')" class="text-danger text-center" style="font-size:small">{{ "Email ID Must Be Valid" }} <br/></span>
                                      
                                     <div class="form-group">
                                         <label for="exampleInputPassword1">Password</label>
-                                        <input type="password" name="password" id="exampleInputPassword1" v-model="Password" v-validate="'required|max:30'" :class="{'form-control': true, 'danger': errors.has('password') }" placeholder="Password">
+                                        <input type="password" name="password" id="exampleInputPassword1" v-model="Password" v-validate="'required'" :class="{'form-control': true, 'danger': errors.has('password') }" placeholder="Password">
                                         <i v-show="errors.has('password')" class="fa fa-warning"></i>
                                     </div>
                                     <span v-show="errors.has('password')" class="text-danger text-center" style="font-size:small" >{{ "Check Password Length" }}</span>
                                     
                                     
-                                    
-                                    <div class="checkbox padding">
-                                        <input type="checkbox" id="inputCheckBox">
-                                        <label for="inputCheckBox">
-                                            <span class="checkbox-input">
-                                            <span class="off">off</span>
-                                            <span class="on">on</span>
-                                            </span>
-                                            remember password
-                                        </label>
-                                    </div>
                                     <span class="sdw-wrap">
-                                        <button type="submit" class="sdw-hover btn btn-material btn-yellow btn-lg ripple-cont">Login</button>
+                                        <button type="button" @click="checkLogin()" class="sdw-hover btn btn-material btn-yellow btn-lg ripple-cont">Login</button>
                                         <span class="sdw"></span>
                                     </span>
 
                                     <ul class="addon-login-btn">
                                         <li>
-                                            <router-link :to="'/Register'"><li><a>register</a></li></router-link>
+                                            <router-link :to="{name:'home'}"><li><a>register</a></li></router-link>
                                             
                                         </li>
                                         <li>or</li>
@@ -315,6 +305,18 @@
                                             <a href="#">restore password</a>
                                         </li>
                                     </ul>
+                                </form>
+                                <form v-if="OTPcreated">
+                                    <div class="form-group">
+                                        <label for="OTPidlogin">OTP</label>
+                                        <input id="OTPidlogin" name="OTPidlogin" v-model="OTPUSER" v-validate="'required'" :class="{'form-control': true, 'danger': errors.has('OTPidlogin') }" type="text" placeholder="OTP">
+                                        <i v-show="errors.has('OTPidlogin')" class="fa fa-warning"></i>
+                                     </div>
+                                     <span v-show="errors.has('OTPidlogin')" class="text-danger text-center" style="font-size:small">{{ "OTP is Required" }} <br/></span>
+                                     <span class="sdw-wrap">
+                                        <button type="button" @click="ProcessOTPuser()" class="sdw-hover btn btn-material btn-yellow btn-lg ripple-cont">Login</button>
+                                        <span class="sdw"></span>
+                                    </span>
                                 </form>
                             </div>
                         </div>
@@ -327,19 +329,117 @@
 </template>
 
 <script>
+import User from "./UserProfile.vue"
 export default {
   
   name:"Header",
+  components:{
+      UserProfile:User
+  },
   data(){
     return{
       Email:"",
       Password:"",
+      CheckLogout:true,
+      OTPcreated:false,
+      OTPUSER:"",
+      UserName:"",
+      isLogin:false,
     }
   },
+  
+  created(){
+      let CheckLogin= this.helper.getuserinfo();
+      if(CheckLogin){
+          this.isLogin=true
+      }
+  },
   methods:{
-    checkifLogin(){
+    Logout(){
+        this.helper.ClearlocalStorage("UI")
+        this.Email=""
+        this.Password=""
+        this.isLogin=false
+        console.log("ERRORS",this.errors.items=[])
+        this.OTPUSER=""
+        this.$router.push("/")
+    },
+    checkLogin(){
 
-    }
+        this.$validator.validateAll().then((result)=>{
+            if(result){
+                this.GetLoginDetails().then((x)=>{
+                    if(x.message=="Login Successfully"){
+                        swal.fire({
+                            icon: 'success',
+                            title: 'Success',
+                            text: "Login Success",
+                        });
+                        this.isLogin = true
+                        this.helper.setUserinfo({username:x.Data.UserName,sessionid:x.Data.SessionID})
+                        this.OTPcreated=false;
+                        this.ShowDashBoard("/");
+
+ 
+                    }else if(x.message=="OTP Already Sended in Mail"){
+                        swal.fire({
+                            icon: 'warning',
+                            title: 'OTP',
+                            text: "OTP Sended in Mail kindly check and Enter",
+                        })
+                        this.OTPcreated=true
+                    }else if(x.message=="Invalid Email or Password"){
+                        swal.fire({
+                            icon: 'error',
+                            title: 'Invalid',
+                            text: "Invalid Email or Password",
+                        })        
+                    }
+                })
+            }
+        })
+    },
+    GetLoginDetails(){
+        return new Promise((resolve,reject)=>{
+            let parameter = {
+                "Username":this.Email,
+                "Password":this.Password,
+            };
+            let Actionurl="users/loginclientuser"
+            parameter.Password = btoa(parameter.Password)
+            this.axios.post(this.helper.SERVICEURL+Actionurl, parameter).then(response => {
+            if(response.data.Success){
+                resolve({message:response.data.Message,Data:response.data.Data})
+            }  else {
+                resolve({message:response.data.Message})
+            } 
+            });
+        })
+    },
+    ProcessOTPuser(){
+        this.helper.ProcessOTPUSER(this.Email,this.OTPUSER).then((x)=>{
+            if(x.message=="Success"){
+                swal.fire({
+                    icon: 'success',
+                    title: 'OTP',
+                    text: "OTP Verified",
+                });
+                this.ShowDashBoard("/");
+
+            }else{
+                swal.fire({
+                    icon: 'error',
+                    title: 'OTP',
+                    text: "Invalid One Time Password",
+                }); 
+            }
+        })
+    },
+    ShowDashBoard(path){
+        $.noConflict();
+        $('#myModal').modal('hide');
+        this.$router.push(path);
+    },
   },
 }
 </script>

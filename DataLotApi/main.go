@@ -6,18 +6,28 @@ import (
 	"log"
 	"net/http"
 
+	// cors "github.com/rs"
+
 	_ "github.com/lib/pq"
 )
 
 func main() {
 	orm.InitDb()
 	defer orm.Close()
+	// mux := http.NewServeMux()
+	// mux.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
+	// 		w.Header().Set("Content-Type", "application/json")
+	// 		w.Write([]byte("{\"hello\": \"world\"}"))
+	// })
 	http.HandleFunc("/users/login", handlers.IndexHandler)
 	http.HandleFunc("/users/getusers", handlers.GetUsers)
 	http.HandleFunc("/users/saveuser", handlers.Saveuser)
 	http.HandleFunc("/users/saveclientuser", handlers.SaveClientUser)
 	http.HandleFunc("/users/checkduplicatemail", handlers.CheckClientDuplicateMail)
 	http.HandleFunc("/users/processotpuser", handlers.ProcessOtpUser)
+	http.HandleFunc("/users/loginclientuser", handlers.LoginClientUser)
+	http.HandleFunc("/users/shoppingcart", handlers.ShoppingCart)
+
 
 	http.HandleFunc("/users/deleteuser", handlers.DeleteUser)
 	http.HandleFunc("/users/updateuser", handlers.Updateuser)
@@ -41,6 +51,7 @@ func main() {
 	http.HandleFunc("/dailydata/dailyapproval", handlers.Get_DailyApproval)
 	http.HandleFunc("/dailydata/approveall", handlers.Daily_approveall)
 	http.HandleFunc("/dailydata/findnumber", handlers.Get_Findnumber)
-
+	// handler := cors.Default().Handler(mux)
+	// http.ListenAndServe("0.0.0.0:8111", handler)
 	log.Fatal(http.ListenAndServe("0.0.0.0:8111", nil))
 }

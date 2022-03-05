@@ -6,6 +6,9 @@ import App from './App';
 import helper from "./Plugins/helper";
 import router from './router';
 import swal from 'sweetalert2';
+global.jQuery = require('jquery');
+var $ = global.jQuery;
+window.$ = $.noConflict();
 window.swal = swal;
 import InputBase from "./components/Input";
 import VeeValidate from 'vee-validate'
