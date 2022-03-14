@@ -19,6 +19,7 @@
                         <span class="info">
                             <!-- Name -->
                             <span class="name text-uppercase">{{UserName}}</span>
+                            <router-link :to="'/edit'"><a>Edit Profile</a></router-link>
                         </span>
                     </span>
                 </li>
@@ -179,19 +180,18 @@ export default {
     }
   },
   methods:{
+    edit(){
+        console.log("edit")
+    },
     shoppingCart(){
       console.log("SESSIONID",this.SessionID)
       let Actionurl="users/shoppingcart"
       let parameter={
         "options":"nothing"
       }
-      this.axios.post(this.helper.SERVICEURL+Actionurl,parameter,{headers:{"NewAgent":this.SessionID}}).then(response => {
-      if(response.data.Success){
-          resolve({message:response.data.Message,Data:response.data.Data})
-      }  else {
-          resolve({message:response.data.Message})
-      } 
-      });
+      this.helper.AjaxPostSessionID(parameter,Actionurl,this).then((x)=>{
+          console.log("x --- ",x)
+      })
     }
   },
 }

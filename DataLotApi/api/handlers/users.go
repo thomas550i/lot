@@ -10,6 +10,7 @@ import (
 	"math/rand"
 	"net/http"
 	"strconv"
+	"strings"
 	"time"
 
 	"github.com/lib/gomail-master"
@@ -272,7 +273,9 @@ func LoginClientUser(w http.ResponseWriter, r *http.Request){
 	type LoginUser struct{
 		UserName string
 		FirstName string
-		LastName string 
+		LastName string
+		Gender string
+		Email string 
 		Password string
 		IsActive string
 		OTP string
@@ -288,7 +291,7 @@ func LoginClientUser(w http.ResponseWriter, r *http.Request){
 	
 	repos:=[]LoginUser{}
 	db = orm.Db()
-	rows, err := db.Query(`select lastname,firstname,mailtoken,isactive from users where username='` + p.UserName + `' and password='` + p.Password + `' `)
+	rows, err := db.Query(`select lastname,firstname,username,gender,mailtoken,isactive from users where username='` + p.UserName + `' and password='` + p.Password + `' `)
 	if err != nil {
 		return
 	}
@@ -298,6 +301,8 @@ func LoginClientUser(w http.ResponseWriter, r *http.Request){
 		err = rows.Scan(
 			&repo.LastName,
 			&repo.FirstName,
+			&repo.Email,
+			&repo.Gender,
 			&repo.OTP,
 			&repo.IsActive,
 		)
@@ -318,8 +323,9 @@ func LoginClientUser(w http.ResponseWriter, r *http.Request){
 			Message="OTP Already Sended in Mail"
 		}else{
 			result["UserName"]=repos[0].FirstName+""+repos[0].LastName
-			sessionid,errors:=CheckSessioninLoginTime(result["UserName"].(string))
-			
+			result["Email"] = repos[0].Email
+			result["Gender"] = repos[0].Gender
+			sessionid,errors:=CheckSessioninLoginTime(repos[0].Email)
 			if errors!=nil{
 				c.ResFail(w, sessionid, err.Error())
 				return
@@ -333,8 +339,85 @@ func LoginClientUser(w http.ResponseWriter, r *http.Request){
 	c.ResSuccess(w,result, Message)
 }
 
+func EditUserProfile(w http.ResponseWriter, r *http.Request){
+	c.SetupResponse(&w, r)
+	type EditUser struct{
+		FullName string
+		Password string
+		Email string
+		Gender string
+		UserName string
+		FirstName string
+		LastName string
+	}
+	p:=EditUser{}
+	decoder := json.NewDecoder(r.Body)
+	err := decoder.Decode(&p)
+	if err!=nil{
+		c.ResFail(w, nil, err.Error())
+		return
+	}
+	if !c.CheckSettionid(&w, r){
+		c.ResFail(w, nil, "SessionExpired")
+		return
+	}
+
+	// repos:=[]EditUser{}
+	// rows, err := db.Query(`select firstname,lastname from users where username='` + p.Email + `'`)
+	// if err != nil {
+	// 	c.ResFail(w, nil, err.Error())
+	// 	return
+	// }
+	// defer rows.Close()
+	// for rows.Next() {
+	// 	repo := EditUser{}
+	// 	err = rows.Scan(
+	// 		&repo.FirstName,
+	// 		&repo.LastName,
+	// 	)
+	// 	if err != nil {
+	// 		c.ResFail(w, nil, err.Error())
+	// 		return
+	// 	}
+	// 	repos = append(repos, repo)
+	// }
+	// ExisitingUserName:=repos[0].FirstName+repos[0].LastName
+	// err = rows.Err()
+	// if err != nil {
+	// 	c.ResFail(w, nil, err.Error())
+	// 	return
+	// }
+
+	GetUserName:=strings.Split(p.FullName," ")
+	NewUserName:=GetUserName[0]
+	LastName:=""
+	if len(GetUserName)>1{
+		LastName=strings.Join(GetUserName[1:],"")
+	}
+	if strings.TrimSpace(LastName)!=""{
+		NewUserName+=LastName
+	}
+	if p.Password==""{
+		rowsupdate, err2 := db.Query(`UPDATE users SET firstname='`+ GetUserName[0] + `',lastname='`+ LastName + `',gender='`+ p.Gender + `' WHERE username = '` + p.Email + `';`)
+		if err2 != nil {
+			c.ResFail(w, nil, err2.Error())
+			return
+		}
+		defer rowsupdate.Close()
+	}else{
+		rowsupdate, err2 := db.Query(`UPDATE users SET firstname='`+ GetUserName[0] + `',lastname='`+ LastName + `',gender='`+ p.Gender + `',password='`+ p.Password + `' WHERE username = '` + p.Email + `';`)
+		if err2 != nil {
+			c.ResFail(w, nil, err2.Error())
+		return
+		}
+		defer rowsupdate.Close()
+	}
+	c.ResSuccess(w,nil, "SUCCESS")
+}
+
 func ShoppingCart(w http.ResponseWriter, r *http.Request){
 	c.SetupResponse(&w, r)
+	
 	type Shoppingcart struct{
 		options string
 	}
@@ -346,12 +429,16 @@ func ShoppingCart(w http.ResponseWriter, r *http.Request){
 		c.ResFail(w, nil, "Not a valid Input")
 		return
 	}
+	if !c.CheckSettionid(&w, r){
+		c.ResFail(w, nil, "SessionExpired")
+		return
+	}
 	c.ResSuccess(w,nil, "SUCCESS")
 
 }
 
 
-func CheckSessioninLoginTime(UserName string)(int,error){
+func CheckSessioninLoginTime(EmailID string)(int,error){
 	type SessionMaster struct{
 		UserName string
 		SessionId int
@@ -360,7 +447,7 @@ func CheckSessioninLoginTime(UserName string)(int,error){
 
 	repos:=[]SessionMaster{}
 	db = orm.Db()
-	rows, err := db.Query(`select username,sessionid from sessionmaster where username='` + UserName + `'`)
+	rows, err := db.Query(`select sessionid from sessionmaster where email='` + EmailID + `'`)
 	if err != nil {
 		return SessionId,err
 	}
@@ -368,7 +455,6 @@ func CheckSessioninLoginTime(UserName string)(int,error){
 	for rows.Next() {
 		repo := SessionMaster{}
 		err = rows.Scan(
-			&repo.UserName,
 			&repo.SessionId,
 		)
 		if err != nil {
@@ -387,7 +473,7 @@ func CheckSessioninLoginTime(UserName string)(int,error){
 
 	Layout:="2006-01-02 15:04:05"
 	PresentTime:=time.Now()
-	ExpireTime:=time.Now().Add(time.Hour * 2)
+	ExpireTime:=time.Now().Add(time.Minute * 10)
 
 
 	if len(repos)==0{
@@ -402,8 +488,8 @@ func CheckSessioninLoginTime(UserName string)(int,error){
 		fmt.Println("ExpireTime TIME ",ExpireTime,ExpireTime.Format(Layout))
 		
 		
-		rows, err := db.Query(`INSERT INTO sessionmaster (username, sessionid, presenttime, expiretime)
-		VALUES ('` + UserName + `', '` + StringSessionID + `', '` + PresentTime.Format(Layout) + `', '` + ExpireTime.Format(Layout) + `');`)
+		rows, err := db.Query(`INSERT INTO sessionmaster (email, sessionid, presenttime, expiretime)
+		VALUES ('` + EmailID + `', '` + StringSessionID + `', '` + PresentTime.Format(Layout) + `', '` + ExpireTime.Format(Layout) + `');`)
 		if err != nil {
 			return SessionId,err
 		}
@@ -414,7 +500,7 @@ func CheckSessioninLoginTime(UserName string)(int,error){
 		fmt.Println("ExpireTime UPDATE TIME ",ExpireTime,ExpireTime.Format(Layout))
 
 
-		rowsupdate, err2 := db.Query(`UPDATE sessionmaster SET presenttime='`+ PresentTime.Format(Layout) + `',expiretime='`+ ExpireTime.Format(Layout) + ` ' WHERE username = '` + UserName + `';`)
+		rowsupdate, err2 := db.Query(`UPDATE sessionmaster SET presenttime='`+ PresentTime.Format(Layout) + `',expiretime='`+ ExpireTime.Format(Layout) + ` ' WHERE email = '` + EmailID + `';`)
 		if err2 != nil {
 			
 			return SessionId,err

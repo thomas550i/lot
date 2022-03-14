@@ -376,7 +376,7 @@ export default {
                             text: "Login Success",
                         });
                         this.isLogin = true
-                        this.helper.setUserinfo({username:x.Data.UserName,sessionid:x.Data.SessionID})
+                        this.helper.setUserinfo({username:x.Data.UserName,sessionid:x.Data.SessionID,email:x.Data.Email,gender:x.Data.Gender})
                         this.OTPcreated=false;
                         this.ShowDashBoard("/");
 

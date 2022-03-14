@@ -1,7 +1,11 @@
 package class
 
 import (
+	orm "DataLotApi/db"
 	"encoding/json"
+	"strings"
+
+	"fmt"
 	"net/http"
 	"time"
 )
@@ -34,6 +38,72 @@ func SetupResponse(w *http.ResponseWriter, req *http.Request) {
 	if (*req).Method == "OPTIONS" {
 		return
 	}
+}
+
+
+func CheckSettionid(w *http.ResponseWriter, req *http.Request)bool{
+	isValidSession:=false
+	type GetSessionTime struct{
+		Sessionid string
+		PresentTime string
+		ExpireTime string
+	}
+	repos:=[]GetSessionTime{}
+	Layout:="2006-01-02 15:04:05"
+	if req.Header.Get("Sessionid")!=""{
+		Sessionid:=req.Header.Get("Sessionid")
+		db := orm.Db()
+		rows, err := db.Query(`select sessionid,presenttime,expiretime from sessionmaster where sessionid='` + Sessionid + `'`)
+		if err != nil {
+			fmt.Println("err",err)
+		}
+		defer rows.Close()
+		for rows.Next() {
+			repo := GetSessionTime{}
+			err = rows.Scan(
+				&repo.Sessionid,
+				&repo.PresentTime,
+				&repo.ExpireTime,
+			)
+			if err != nil {
+				
+			}
+			repos = append(repos, repo)
+		}
+		err = rows.Err()
+		if err != nil {
+			
+		}
+		
+
+		GetExpireTime:=FormatTime("2006-01-02 15:04:05",repos[0].ExpireTime)
+		PresentTime:=time.Now()
+		fmt.Println("GetExpireTime",GetExpireTime)
+		fmt.Println("PresentTime",PresentTime)
+		if PresentTime.Before(GetExpireTime){
+			isValidSession =true
+			GetExpireTime.Add(time.Minute * 10)
+			rowsupdate, err2 := db.Query(`UPDATE sessionmaster SET presenttime='`+ PresentTime.Format(Layout) + `',expiretime='`+ GetExpireTime.Format(Layout) + ` ' WHERE sessionid = '` + repos[0].Sessionid + `';`)
+			if err2 != nil {
+				
+			}
+			defer rowsupdate.Close()
+		}
+	}
+
+	return isValidSession
+
+}
+
+
+func FormatTime(layout string,Value string)time.Time{
+	var NewTime time.Time
+	GetTime,_:=time.Parse(layout,strings.TrimSpace(Value))
+	loc, _ := time.LoadLocation("Asia/Kolkata")
+
+	NewTime =time.Date(GetTime.Year(),GetTime.Month(),GetTime.Day(),GetTime.Hour(),GetTime.Minute(),GetTime.Second(),GetTime.Nanosecond(),loc)
+
+	return NewTime
 }
 
 func ResSuccess(w http.ResponseWriter, Data interface{}, m string) {
