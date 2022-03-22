@@ -515,7 +515,61 @@ func CheckSessioninLoginTime(EmailID string)(int,error){
 
 }
 
+func GetDailyShows(w http.ResponseWriter, r *http.Request){
+	c.SetupResponse(&w, r)
+	type Shows struct{
+		Time  string
+		IsActive bool
+		IsspecialEvent bool
+		bannerimg string
+		date time.Time
+	}
 
+	time.LoadLocation("Asia/Calcutta")
+	PresentTime:=time.Now().Add(time.Minute *30)
+	FormattedTime:=strings.Split(PresentTime.Format("Mon Jan 02 2006 15:02:02 GMT+0530 (India Standard Time)"),"GMT")
+	StringTime:=FormattedTime[0]
+	
+	repos:=[]Shows{}
+	db := orm.Db()
+	rows, err := db.Query(`select Time,IsActive,IsspecialEvent,bannerimg,date from shows where date>='` + StringTime + `'`)
+	if err != nil {
+		fmt.Println("err",err)
+	}
+	defer rows.Close()
+	for rows.Next() {
+		repo := Shows{}
+		err = rows.Scan(
+			&repo.Time,
+			&repo.IsActive,
+			&repo.IsspecialEvent,
+			&repo.bannerimg,
+			&repo.date,
+		)
+		if err != nil {
+			fmt.Println(err)
+			fmt.Println()
+		}
+		repos = append(repos, repo)
+	}
+	err = rows.Err()
+	if err != nil {
+			fmt.Println(err)
+	}
+	var FinalRow []interface{}
+	for _,value:=range repos{
+		ShowsStruct:=make(map[string]interface{})
+		ShowsStruct["ShowHour"] = value.Time
+		ShowsStruct["TimeShows"] = value.date.Format("02-Jan-2006")
+		ShowsStruct["SpecialEvent"] = value.IsspecialEvent
+		ShowsStruct["BannerImg"] = value.bannerimg
+		ShowsStruct["display"] = true
+		FinalRow = append(FinalRow, ShowsStruct)
+	}
+	
+	
+	c.ResSuccess(w,FinalRow, "SUCCESS")
+}
 
 
 

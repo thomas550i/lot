@@ -35,6 +35,7 @@ func main() {
 	mux.HandleFunc("/users/processotpuser", handlers.ProcessOtpUser)
 	mux.HandleFunc("/users/loginclientuser", handlers.LoginClientUser)
 	mux.HandleFunc("/users/shoppingcart", handlers.ShoppingCart)
+	mux.HandleFunc("/users/getdailyshows", handlers.GetDailyShows)
 
 	mux.HandleFunc("/users/deleteuser", handlers.DeleteUser)
 	mux.HandleFunc("/users/updateuser", handlers.Updateuser)

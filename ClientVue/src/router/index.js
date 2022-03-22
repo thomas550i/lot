@@ -2,6 +2,7 @@ import Vue from 'vue'
 import Router from 'vue-router'
 import Register from "../views/Register"
 import EditProfile from "../views/EditProfile"
+import UpcomingShows from "../views/UpcomingShows"
 import AuthLayout from "../layout/AuthLayout";
 
 Vue.use(Router)
@@ -11,7 +12,14 @@ export default new Router({
     {
       path: '/',
       name: 'home',
-      component: AuthLayout
+      component: AuthLayout,
+      children:[
+        {
+          path: '/',
+          name: 'UpcomingShows',
+          component: UpcomingShows,
+        },
+      ]
     },
     {
       path: '/Register',
