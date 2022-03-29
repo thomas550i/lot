@@ -3,6 +3,8 @@ import Router from 'vue-router'
 import Register from "../views/Register"
 import EditProfile from "../views/EditProfile"
 import UpcomingShows from "../views/UpcomingShows"
+import SelectSlot from "../views/SelectSlot"
+import SelectNumber from "../views/SelectNumber"
 import AuthLayout from "../layout/AuthLayout";
 
 Vue.use(Router)
@@ -18,6 +20,16 @@ export default new Router({
           path: '/',
           name: 'UpcomingShows',
           component: UpcomingShows,
+        },
+        {
+          path: '/SelectSlot',
+          name: 'SelectSlot',
+          component: SelectSlot,
+        },
+        {
+          path: '/SelectNumber',
+          name: 'SelectNumber',
+          component: SelectNumber,
         },
       ]
     },

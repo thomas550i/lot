@@ -31,9 +31,10 @@
 
                                       <div class="row" style="margin-top:50px;">
                                         <div class="info">
-                                          <button class="icon-card" style="margin:10px;background-color:#00a0ea;color:#fff;"> Buy Now
+                                          <router-link :to="'/SelectSlot'"><button class="icon-card" @click="savelocal(Items)" style="margin:10px;background-color:#00a0ea;color:#fff;"> Buy Now
                                             <i class="icofont icofont-cart-alt"></i>
-                                        </button>
+                                        </button></router-link>
+                                          
                                         </div>
                                       </div>
                                       
@@ -131,7 +132,7 @@ export default {
     next(){
         
         if(this.begin<this.List.length && this.end<this.List.length){
-          if(this.Translate>-1750 && this.temp.length>5){
+          if(this.Translate>-1750 && this.temp.length>0){
           this.Translate-=250
           }else if(this.temp.length==0){
           console.log("TEMPEMPTY",this.temp,this.begin,this.end)
@@ -175,7 +176,7 @@ export default {
           }
           this.temp = this.List.slice(this.begin,this.end)    
         }else{
-          this.Translate=0
+          this.Translate=-250
           this.begin=0
           let end = 0
           this.List.forEach((x)=>{
@@ -258,6 +259,9 @@ export default {
         } 
         });
       })
+    },
+    savelocal(items){
+      this.helper.updateuserinfo({"lotDataID":items.ID,"lotDataTimeShow":items.TimeShows,"lotDataShowHour":items.ShowHour});
     }
   },
 }

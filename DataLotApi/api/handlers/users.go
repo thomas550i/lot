@@ -95,6 +95,21 @@ func setSession(u string) string {
 	return string(rand.Intn(200))
 }
 
+
+// func Temporary(){
+// 	client, err := coinpayments.NewClient(&coinpayments.Config{ PublicKey: "79bd11967195b219c05f54c82d57e6e9e81da2c3d4d875d81c680f484fa774e3", PrivateKey: "B1aC2182F70F21fCEf0b841a528d33D7e20365E871625A8658A5169e49767785"}, &http.Client{ Timeout: 10 * time.Second})
+// 	WithdrawalRequestValues:=coinpayments. WithdrawalRequest{}
+// 	WithdrawalRequestValues.Amount="10"
+// 	WithdrawalRequestValues.Currency="LTC"
+// 	WithdrawalRequestValues.AutoConfirm=1
+// 	WithdrawalRequestValues.MerchantID="06a917e34c31038b4af460870e4f1f9d"
+// 	WithDrawValues,err3:=client.CallCreateTransfer(&WithdrawalRequestValues)
+// 	fmt.Println(WithDrawValues,err3)
+// 	if err!=nil{
+// 		fmt.Println("Error1 Payment ",err)
+// 	}
+// }
+
 func GetUsers(w http.ResponseWriter, r *http.Request) {
 	c.SetupResponse(&w, r)
 	//....
@@ -436,6 +451,230 @@ func ShoppingCart(w http.ResponseWriter, r *http.Request){
 	c.ResSuccess(w,nil, "SUCCESS")
 
 }
+func DeleteCartItem(w http.ResponseWriter, r *http.Request) {
+	c.SetupResponse(&w, r)
+	type shoppingcart struct{
+		ID int
+	}
+	p:=shoppingcart{}
+	//c.GetPlayload(r, w, &p)
+
+	decoder := json.NewDecoder(r.Body)
+	err := decoder.Decode(&p)
+	if err != nil {
+		c.ResFail(w, nil, "Not a valid Input")
+		return
+	}
+
+	if !c.CheckSettionid(&w, r){
+		c.ResFail(w, nil, "SessionExpired")
+		return
+	}
+
+	db = orm.Db()
+	ckrows, ckerr := db.Query(`DELETE FROM shoppingcart WHERE id='` + fmt.Sprint(p.ID) + `'`)
+	if ckerr != nil {
+		c.ResFail(w, nil, ckerr.Error())
+		return
+	} else {
+		c.ResSuccess(w, nil, "Deleted Successfully")
+	}
+	defer ckrows.Close()
+}
+
+
+func AddToCart(w http.ResponseWriter, r *http.Request){
+	c.SetupResponse(&w, r)
+	
+	type Shoppingcart struct{
+		UserMail string
+		Price int
+		ShowHours string
+		TimeShows string
+		ShowType string
+		TicketNumber int
+		Showid int
+	}
+	fmt.Println("SESSION ID",r.Header.Get("User-Agent"))
+	p := Shoppingcart{}
+	decoder := json.NewDecoder(r.Body)
+	err := decoder.Decode(&p)
+	if err != nil {
+		c.ResFail(w, nil, "Not a valid Input")
+		return
+	}
+	if !c.CheckSettionid(&w, r){
+		c.ResFail(w, nil, "SessionExpired")
+		return
+	}
+
+	rows, err := db.Query(`INSERT INTO shoppingcart (username, showtype, showid, price,ticketnumber,showhours,timeshows)
+		VALUES ('` + p.UserMail + `', '` + p.ShowType + `', '` + fmt.Sprint(p.Showid) + `','` + fmt.Sprint(p.Price) + `', '` + fmt.Sprint(p.TicketNumber) + `', '` + fmt.Sprint(p.ShowHours) + `', '` + fmt.Sprint(p.TimeShows) + `');`)
+	if err != nil {
+		c.ResFail(w, nil, err.Error())
+		return 
+	}
+	defer rows.Close()
+
+	c.ResSuccess(w,nil, "SUCCESS")
+
+}
+
+func RemoveExpiredTickets(w http.ResponseWriter, r *http.Request){
+	c.SetupResponse(&w, r)
+	type shoppingcart struct{
+		MailId string
+	}
+	p:=shoppingcart{}
+	//c.GetPlayload(r, w, &p)
+
+	decoder := json.NewDecoder(r.Body)
+	err := decoder.Decode(&p)
+	if err != nil {
+		c.ResFail(w, nil, "Not a valid Input")
+		return
+	}
+
+	if !c.CheckSettionid(&w, r){
+		c.ResFail(w, nil, "SessionExpired")
+		return
+	}
+
+	db = orm.Db()
+	ckrows, ckerr := db.Query(`DELETE FROM shoppingcart WHERE username='` + fmt.Sprint(p.MailId) + `' AND expired='true'`)
+	if ckerr != nil {
+		c.ResFail(w, nil, ckerr.Error())
+		return
+	}
+	defer ckrows.Close()
+	
+	c.ResSuccess(w,nil,"SUCCESS")
+}
+
+func GetExisitingCart(w http.ResponseWriter, r *http.Request){
+	c.SetupResponse(&w, r)
+	
+	type Shoppingcart struct{
+		UserMail string
+		Username string
+		ShowType string
+		Showid int
+		TicketNumber int
+		Price int
+		ShowHours string
+		TimeShows string
+		ID int
+		Expired bool
+	}
+	fmt.Println("SESSION ID",r.Header.Get("User-Agent"))
+	p := Shoppingcart{}
+
+	decoder := json.NewDecoder(r.Body)
+	err := decoder.Decode(&p)
+	if err != nil {
+		c.ResFail(w, nil, "Not a valid Input")
+		return
+	}
+	if !c.CheckSettionid(&w, r){
+		c.ResFail(w, nil, "SessionExpired")
+		return
+	}
+
+
+	repos:=[]Shoppingcart{}
+	db = orm.Db()
+	rows, err := db.Query(`select id,username,showtype,showid,price,ticketnumber,showhours,timeshows from shoppingcart where username='` + p.UserMail + `'`)
+	if err != nil {
+		c.ResFail(w, err, "Error")
+		return
+	}
+	defer rows.Close()
+	for rows.Next() {
+		repo := Shoppingcart{}
+		err = rows.Scan(
+			&repo.ID,
+			&repo.Username,
+			&repo.ShowType,
+			&repo.Showid,
+			&repo.Price,
+			&repo.TicketNumber,
+			&repo.ShowHours,
+			&repo.TimeShows,
+
+		)
+		if err != nil {
+			c.ResFail(w, err, "Error")
+			return
+		}
+		repos = append(repos, repo)
+	}
+	
+	err = rows.Err()
+	if err != nil {
+		c.ResFail(w, err, "Error")
+		return
+	}
+	for index,rows:=range repos{
+		if !ReturnValidDailyShows(rows.Showid){
+			repos[index].Expired=true
+		}
+	}
+
+	c.ResSuccess(w,repos,"SUCCESS")
+}
+
+
+func ReturnValidDailyShows(Showid int)bool{
+	Valid:=true
+	time.LoadLocation("Asia/Calcutta")
+	PresentTime:=time.Now().Add(time.Minute * 30)
+	FormattedTime:=strings.Split(PresentTime.Format("Mon Jan 02 2006 15:02:02 GMT+0530 (India Standard Time)"),"GMT")
+	StringTime:=FormattedTime[0]
+	type Shows struct{
+		ID int
+		Time  string
+		IsActive bool
+		IsspecialEvent bool
+		bannerimg string
+		date time.Time
+	}
+	repos:=[]Shows{}
+	db := orm.Db()
+	rows, err := db.Query(`select id,Time,IsActive,IsspecialEvent,bannerimg,date from shows where date>='` + StringTime + `' AND id='`+fmt.Sprint(Showid)+`'`)
+	if err != nil {
+		fmt.Println("err",err)
+	}
+	defer rows.Close()
+	for rows.Next() {
+		repo := Shows{}
+		err = rows.Scan(
+			&repo.ID,
+			&repo.Time,
+			&repo.IsActive,
+			&repo.IsspecialEvent,
+			&repo.bannerimg,
+			&repo.date,
+		)
+		if err != nil {
+			fmt.Println(err)
+			fmt.Println()
+		}
+		repos = append(repos, repo)
+	}
+	err = rows.Err()
+	if err != nil {
+			fmt.Println(err)
+	}
+	if len(repos)==0{
+		Valid = false
+		rowsupdate, err2 := db.Query(`UPDATE shoppingcart SET expired='`+ "true" +`'WHERE showid = '` + fmt.Sprint(Showid) + `';`)
+		if err2 != nil {
+			
+		}
+		defer rowsupdate.Close()		
+	}
+	return Valid
+}
 
 
 func CheckSessioninLoginTime(EmailID string)(int,error){
@@ -518,13 +757,14 @@ func CheckSessioninLoginTime(EmailID string)(int,error){
 func GetDailyShows(w http.ResponseWriter, r *http.Request){
 	c.SetupResponse(&w, r)
 	type Shows struct{
+		ID int
 		Time  string
 		IsActive bool
 		IsspecialEvent bool
 		bannerimg string
 		date time.Time
 	}
-
+//	Temporary()
 	time.LoadLocation("Asia/Calcutta")
 	PresentTime:=time.Now().Add(time.Minute *30)
 	FormattedTime:=strings.Split(PresentTime.Format("Mon Jan 02 2006 15:02:02 GMT+0530 (India Standard Time)"),"GMT")
@@ -532,7 +772,7 @@ func GetDailyShows(w http.ResponseWriter, r *http.Request){
 	
 	repos:=[]Shows{}
 	db := orm.Db()
-	rows, err := db.Query(`select Time,IsActive,IsspecialEvent,bannerimg,date from shows where date>='` + StringTime + `'`)
+	rows, err := db.Query(`select id,Time,IsActive,IsspecialEvent,bannerimg,date from shows where date>='` + StringTime + `'`)
 	if err != nil {
 		fmt.Println("err",err)
 	}
@@ -540,6 +780,7 @@ func GetDailyShows(w http.ResponseWriter, r *http.Request){
 	for rows.Next() {
 		repo := Shows{}
 		err = rows.Scan(
+			&repo.ID,
 			&repo.Time,
 			&repo.IsActive,
 			&repo.IsspecialEvent,
@@ -564,6 +805,7 @@ func GetDailyShows(w http.ResponseWriter, r *http.Request){
 		ShowsStruct["SpecialEvent"] = value.IsspecialEvent
 		ShowsStruct["BannerImg"] = value.bannerimg
 		ShowsStruct["display"] = true
+		ShowsStruct["ID"] = value.ID
 		FinalRow = append(FinalRow, ShowsStruct)
 	}
 	

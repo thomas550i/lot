@@ -34,7 +34,11 @@ func main() {
 	mux.HandleFunc("/users/checkduplicatemail", handlers.CheckClientDuplicateMail)
 	mux.HandleFunc("/users/processotpuser", handlers.ProcessOtpUser)
 	mux.HandleFunc("/users/loginclientuser", handlers.LoginClientUser)
-	mux.HandleFunc("/users/shoppingcart", handlers.ShoppingCart)
+	mux.HandleFunc("/users/addinshoppingcart", handlers.AddToCart)
+	mux.HandleFunc("/users/exisitingcart", handlers.GetExisitingCart)
+	mux.HandleFunc("/users/deletecartitem", handlers.DeleteCartItem)
+	mux.HandleFunc("/users/removeexpiredtickets", handlers.RemoveExpiredTickets)
+
 	mux.HandleFunc("/users/getdailyshows", handlers.GetDailyShows)
 
 	mux.HandleFunc("/users/deleteuser", handlers.DeleteUser)

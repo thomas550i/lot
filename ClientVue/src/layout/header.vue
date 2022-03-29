@@ -23,7 +23,7 @@
                 <div v-if="!isLogin" class="btn-cols">
                     
                     <ul class="list-btn-group">
-                      <li><a href="#Login" data-toggle="modal" data-target="#myModal">Sign In</a></li>
+                      <li><a href="#Login" id="openmodal" data-toggle="modal" data-target="#myModal">Sign In</a></li>
                         <router-link :to="'/Register'"><li><a style="margin-left:5px;">Sign Up</a></li></router-link>
                     </ul>
                 </div>
@@ -53,7 +53,7 @@
                         <!-- Info -->
                         <span class="info">
                             <!-- Name -->
-                            <span class="name text-uppercase">John Doe</span>
+                            <span class="name text-uppercase">Guest User</span>
                         </span>
                     </span>
                 </li>
@@ -63,7 +63,7 @@
                     
                     <a href="#" class="cart-icon hidden-xs" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">
                         
-                        <span class="badge bg-blue">3</span>
+                        <span class="badge bg-blue"></span>
                         
                         <i class="icofont icofont-cart-alt"></i>
                     </a>
@@ -73,33 +73,22 @@
                         Shopping cart
                     </a>
                     
-                    <!-- Dropdown items list -->
                     <ul class="dropdown-menu">
-                        
-                        <!-- Item -->
-                        <li>
+                        <li  v-for="(ExistingShows,index) in ShoppedItems" :key="index">
                             <div class="wrap">
-                                
-                                <!-- Image -->
-                                <div class="image">
-                                    <img src="images/shop/img-01.jpg" alt="">
-                                </div>
-                                
-                                <!-- Caption -->
                                 <div class="caption">
                                     <span class="comp-header st-1 text-uppercase">
-                                        T-SHIPT
                                         <span>
-                                            MEN COLLECTION
+                                            {{ExistingShows.TimeShows}}    
                                         </span>
                                         <span>
-                                            FAKE BRAND
+                                            {{ExistingShows.ShowHours}}
                                         </span>
+
                                     </span>
-                                    
                                     <span class="price">
-                                        <span class="text-grey-dark">$</span>
-                                        257 <small class="text-grey-dark">.00</small>
+                                            <span class="text-grey-dark">$</span>
+                                            {{ExistingShows.Price}} <small class="text-grey-dark">.00</small>
                                     </span>
                                 </div>
                                 
@@ -109,77 +98,14 @@
                                 </span>
                             </div>
                         </li>
-                        
-                        <!-- Item -->
-                        <li>
-                            <div class="wrap">
-                                
-                                <!-- Image -->
-                                <div class="image">
-                                    <img src="images/shop/img-01.jpg" alt="">
-                                </div>
-                                
-                                <!-- Caption -->
-                                <div class="caption">
-                                    <span class="comp-header st-1 text-uppercase">
-                                        T-SHIPT
-                                        <span>
-                                            MEN COLLECTION
-                                        </span>
-                                        <span>
-                                            FAKE BRAND
-                                        </span>
+                        <li v-if="helper.ListofCart.length==0">
+                            <div class="caption">
+                                    <span class="comp-header st-1 text-uppercase" style="position:relative;left:75px;">
+                                        No Items in Cart
                                     </span>
-                                    
-                                    <span class="price">
-                                        <span class="text-grey-dark">$</span>
-                                        257 <small class="text-grey-dark">.00</small>
-                                    </span>
-                                </div>
-                                
-                                <!-- Remove btn -->
-                                <span class="remove-btn bg-blue">
-                                    <i class="icofont icofont-bucket"></i>
-                                </span>
                             </div>
-                        </li>
-                        
-                        <!-- Item -->
-                        <li>
-                            <div class="wrap">
-                                
-                                <!-- Image -->
-                                <div class="image">
-                                    <img src="images/shop/img-01.jpg" alt="">
-                                </div>
-                                
-                                <!-- Caption -->
-                                <div class="caption">
-                                    <span class="comp-header st-1 text-uppercase">
-                                        T-SHIPT
-                                        <span>
-                                            MEN COLLECTION
-                                        </span>
-                                        <span>
-                                            FAKE BRAND
-                                        </span>
-                                    </span>
-                                    
-                                    <span class="price">
-                                        <span class="text-grey-dark">$</span>
-                                        257 <small class="text-grey-dark">.00</small>
-                                    </span>
-                                </div>
-                                
-                                <!-- Remove btn -->
-                                <span class="remove-btn bg-blue">
-                                    <i class="icofont icofont-bucket"></i>
-                                </span>
-                            </div>
-                        </li>
-                        
-                                    
-                        <li class="more-btn sdw">
+                        </li>        
+                        <li class="more-btn sdw" v-if="helper.ListofCart.length>0">
                             <a href="card-page-step-1.html" class="btn-material btn-primary">
                                 View order <i class="icofont icofont-check-circled"></i>
                             </a>
@@ -190,7 +116,7 @@
                 </li>
             </ul> 
             <UserProfile v-if="isLogin"/>
-            <ul class="nav navbar-nav">
+            <!-- <ul class="nav navbar-nav">
                 <li class="active">
                     <a href="index.html">
                         home
@@ -227,7 +153,7 @@
                         <li><a href="blog-item.html">Item blog</a></li>
                     </ul>
                 </li>
-            </ul>
+            </ul> -->
         
         </div><!-- /.navbar-collapse -->
   </div><!-- /.container-fluid --> 
@@ -237,7 +163,7 @@
                 <div class="modal-content">
                    
                     <div class="modal-header">
-                        <button type="button" class="close" data-dismiss="modal">
+                        <button type="button" class="close" id="modalclose" data-dismiss="modal">
                             <span aria-hidden="true">
                                 <i class="icofont icofont-close-line"></i>
                             </span>
@@ -354,6 +280,15 @@ export default {
           this.isLogin=true
       }
   },
+  computed:{
+      ShoppedItems(){
+          let ListofItems=[]
+          if(this.helper.LoginFromAddCart){
+            ListofItems = this.helper.ListofCart;   
+          }
+          return ListofItems
+      }
+  },
   methods:{
     Logout(){
         this.helper.ClearlocalStorage("UI")
@@ -436,9 +371,13 @@ export default {
         })
     },
     ShowDashBoard(path){
-        $.noConflict();
-        $('#myModal').modal('hide');
-        this.$router.push(path);
+        console.log("Savein Addcart")
+        document.getElementById("modalclose").click();
+        if(!this.helper.LoginFromAddCart){
+            this.$router.push(path);
+        }else{
+            this.helper.SaveCart();
+        }
     },
   },
 }
