@@ -13,6 +13,8 @@ import (
 	"strings"
 	"time"
 
+	coinbase "github.com/coinbase-commerce-go-main"
+
 	"github.com/lib/gomail-master"
 )
 
@@ -96,31 +98,8 @@ func setSession(u string) string {
 }
 
 
-// func Temporary(){
-// 	client, err := coinpayments.NewClient(&coinpayments.Config{ PublicKey: "79bd11967195b219c05f54c82d57e6e9e81da2c3d4d875d81c680f484fa774e3", PrivateKey: "B1aC2182F70F21fCEf0b841a528d33D7e20365E871625A8658A5169e49767785"}, &http.Client{ Timeout: 10 * time.Second})
-// 	WithdrawalRequestValues:=coinpayments. WithdrawalRequest{}
-// 	WithdrawalRequestValues.Amount="10"
-// 	WithdrawalRequestValues.Currency="LTC"
-// 	WithdrawalRequestValues.AutoConfirm=1
-// 	WithdrawalRequestValues.MerchantID="06a917e34c31038b4af460870e4f1f9d"
-// 	WithDrawValues,err3:=client.CallCreateTransfer(&WithdrawalRequestValues)
-// 	fmt.Println(WithDrawValues,err3)
-// 	if err!=nil{
-// 		fmt.Println("Error1 Payment ",err)
-// 	}
-// }
-
 func GetUsers(w http.ResponseWriter, r *http.Request) {
 	c.SetupResponse(&w, r)
-	//....
-	// p := c.Users{}
-	// c.GetPlayload(r, w, &p)
-	// decoder := json.NewDecoder(r.Body)
-	// err := decoder.Decode(&p)
-	// if err != nil {
-	// 	c.ResFail(w, nil, "Not a valid Input")
-	// 	return
-	// }
 
 	db = orm.Db()
 	repos := []c.Users{}
@@ -508,8 +487,8 @@ func AddToCart(w http.ResponseWriter, r *http.Request){
 		return
 	}
 
-	rows, err := db.Query(`INSERT INTO shoppingcart (username, showtype, showid, price,ticketnumber,showhours,timeshows)
-		VALUES ('` + p.UserMail + `', '` + p.ShowType + `', '` + fmt.Sprint(p.Showid) + `','` + fmt.Sprint(p.Price) + `', '` + fmt.Sprint(p.TicketNumber) + `', '` + fmt.Sprint(p.ShowHours) + `', '` + fmt.Sprint(p.TimeShows) + `');`)
+	rows, err := db.Query(`INSERT INTO shoppingcart (username, showtype, showid, price,paymentstatus,ticketnumber,showhours,timeshows,expired)
+		VALUES ('` + p.UserMail + `', '` + p.ShowType + `', '` + fmt.Sprint(p.Showid) + `','` + fmt.Sprint(p.Price) + `','` + fmt.Sprint("created") + `', '` + fmt.Sprint(p.TicketNumber) + `', '` + fmt.Sprint(p.ShowHours) + `', '` + fmt.Sprint(p.TimeShows) + `','` + fmt.Sprint(false) + `');`)
 	if err != nil {
 		c.ResFail(w, nil, err.Error())
 		return 
@@ -541,7 +520,7 @@ func RemoveExpiredTickets(w http.ResponseWriter, r *http.Request){
 	}
 
 	db = orm.Db()
-	ckrows, ckerr := db.Query(`DELETE FROM shoppingcart WHERE username='` + fmt.Sprint(p.MailId) + `' AND expired='true'`)
+	ckrows, ckerr := db.Query(`DELETE FROM shoppingcart WHERE username='` + fmt.Sprint(p.MailId) + `' AND expired='true' AND ordertoken is null`)
 	if ckerr != nil {
 		c.ResFail(w, nil, ckerr.Error())
 		return
@@ -583,7 +562,7 @@ func GetExisitingCart(w http.ResponseWriter, r *http.Request){
 
 	repos:=[]Shoppingcart{}
 	db = orm.Db()
-	rows, err := db.Query(`select id,username,showtype,showid,price,ticketnumber,showhours,timeshows from shoppingcart where username='` + p.UserMail + `'`)
+	rows, err := db.Query(`select id,username,showtype,showid,price,ticketnumber,showhours,timeshows from shoppingcart where username='` + p.UserMail + `' and ordertoken is null`)
 	if err != nil {
 		c.ResFail(w, err, "Error")
 		return
@@ -754,6 +733,270 @@ func CheckSessioninLoginTime(EmailID string)(int,error){
 
 }
 
+
+func ProceedToCheckOut(w http.ResponseWriter, r *http.Request){
+	c.SetupResponse(&w, r)	
+	type Proceed struct{
+		MailId string
+	}
+	p:=Proceed{}
+	decoder := json.NewDecoder(r.Body)
+	err := decoder.Decode(&p)
+	if err != nil {
+		c.ResFail(w, nil, "Not a valid Input")
+		return
+	}
+	if !c.CheckSettionid(&w, r){
+		c.ResFail(w, nil, "SessionExpired")
+		return
+	}
+	code:=""
+	type ShowTickets struct{
+		ID int
+		Username string
+		ShowId int
+		Price int
+		PaymentStatus string
+		ExpiredStatus bool
+	}
+	repos:=[]ShowTickets{}
+	db := orm.Db()
+	rows, err := db.Query(`select id,username,showid,price,paymentstatus,expired from shoppingcart where username='` + p.MailId + `' AND ordertoken IS NULL`)
+	if err != nil {
+		fmt.Println("err",err)
+	}
+	defer rows.Close()
+	for rows.Next() {
+		repo := ShowTickets{}
+		err = rows.Scan(
+			&repo.ID,
+			&repo.Username,
+			&repo.ShowId,
+			&repo.Price,
+			&repo.PaymentStatus,
+			&repo.ExpiredStatus,
+		)
+		if err != nil {
+			fmt.Println(err)
+		}
+		repos = append(repos, repo)
+	}
+	err = rows.Err()
+	if err != nil {
+			fmt.Println(err)
+	}
+	if len(repos)>0{
+		fmt.Print(len(repos))
+		TotalAmount:=0.0
+		showids:=""
+		for _,value:=range repos{
+			if showids!=""{
+				showids+=","+fmt.Sprint(value.ID)
+			}else{
+				showids=fmt.Sprint(value.ID)
+			}
+			TotalAmount+=float64(value.Price)
+		}
+		client := coinbase.Client("c91e3b19-00b6-473c-82f5-d3ed1ee6815a")
+		charge, err := client.Charge.Create(coinbase.ChargeParam{
+			Name:        "Buy Ticket",
+			Description: "Place Your Orders",
+			Local_price: coinbase.Money{
+				Amount:   fmt.Sprint(TotalAmount), //amount to be paid
+				Currency: "USD",
+			},
+			Pricing_type: "fixed_price",
+			Redirect_url: "http://localhost:8080/#/",   //success page
+			Cancel_url:   "http://localhost:8080/#/", //cancel page
+		})
+		if err!=nil{
+			fmt.Println("Error ----- ",err)
+		}
+		if value,ok:=charge.(map[string]interface{});ok{
+				if Datavalue,ok:=value["data"].(map[string]interface{});ok{
+					code = Datavalue["code"].(string)
+				}
+				PresentTime:=time.Now().Format("2006-01-02 15:04:05")
+				fmt.Println(PresentTime)
+				rows, err := db.Query(`INSERT INTO transactions (username, token, totalamount, responsedata, paymentstatus, showids,timeofdate)
+				VALUES ('` + p.MailId + `', '` + code + `', '` + fmt.Sprint(TotalAmount) + `', '` + fmt.Sprint(charge) + `', '`+"created"+`', '` + showids + `', '` + PresentTime + `');`)
+				if err != nil {
+					fmt.Println("Errors ----- ",err)
+					c.ResFail(w, nil, "Error in Backend")
+					return
+				}
+				defer rows.Close()
+				updateordertokennumber(code)
+
+			}
+	}
+	c.ResSuccess(w,code, "SUCCESS")
+}
+
+func GetTransactionById(w http.ResponseWriter, r *http.Request){
+	c.SetupResponse(&w, r)	
+	type Transactbyid struct{
+		Transactid int
+	}
+	p:=Transactbyid{}
+	decoder := json.NewDecoder(r.Body)
+	err := decoder.Decode(&p)
+	if err != nil {
+		c.ResFail(w, nil, "Not a valid Input")
+		return
+	}
+	if !c.CheckSettionid(&w, r){
+		c.ResFail(w, nil, "SessionExpired")
+		return
+	}
+	type TransactionByid struct{
+		ID int
+		Token string
+		Showids string
+	}
+	repos:=[]TransactionByid{}
+	db := orm.Db()
+	rows, err := db.Query(`select token,id,showids from transactions where id='` + fmt.Sprint(p.Transactid) + `'`)
+	if err != nil {
+		fmt.Println("err",err)
+	}
+	defer rows.Close()
+	for rows.Next() {
+		repo := TransactionByid{}
+		err = rows.Scan(
+			&repo.Token,
+			&repo.ID,
+			&repo.Showids,
+		)
+		if err != nil {
+			fmt.Println(err)
+		}
+		repos = append(repos, repo)
+	}
+	err = rows.Err()
+	if err != nil {
+			fmt.Println(err)
+	}
+	type ListofShoppingCart struct{
+		ShowType string
+		Price int
+		PaymentStatus string
+		ShowHours string
+		TimeShows string
+		TicketNumber string
+	}
+	listofCart:=[]ListofShoppingCart{}
+	if len(repos)>0{
+		for _,value:=range repos{	
+			db := orm.Db()
+			rows, err := db.Query(`select showtype,price,paymentstatus,showhours,timeshows,ticketnumber from shoppingcart where ordertoken='` + fmt.Sprint(value.Token) + `'`)
+			if err != nil {
+				fmt.Println("err",err)
+			}
+			defer rows.Close()
+			for rows.Next() {
+				repo := ListofShoppingCart{}
+				err = rows.Scan(
+					&repo.ShowType,
+					&repo.Price,
+					&repo.PaymentStatus,
+					&repo.ShowHours,
+					&repo.TimeShows,
+					&repo.TicketNumber,
+				)
+				if err != nil {
+					fmt.Println(err)
+				}
+				listofCart = append(listofCart, repo)
+			}
+			err = rows.Err()
+			if err != nil {
+					fmt.Println(err)
+			}	
+		}
+	}
+	c.ResSuccess(w,listofCart, "SUCCESS")
+}
+
+
+func GetTransactions(w http.ResponseWriter, r *http.Request){
+	c.SetupResponse(&w, r)	
+	type Transact struct{
+		MailId string
+	}
+	p:=Transact{}
+	decoder := json.NewDecoder(r.Body)
+	err := decoder.Decode(&p)
+	if err != nil {
+		c.ResFail(w, nil, "Not a valid Input")
+		return
+	}
+	if !c.CheckSettionid(&w, r){
+		c.ResFail(w, nil, "SessionExpired")
+		return
+	}
+	type Transaction struct{
+		ID int
+		Username string
+		TotalAmount int
+		PaymentStatus string
+		Showids string
+		Token string
+		TimeofDate string
+	}
+	repos:=[]Transaction{}
+	db := orm.Db()
+	rows, err := db.Query(`select id,username,totalamount,paymentstatus,showids,token,timeofdate from transactions where username='` + p.MailId + `'`)
+	if err != nil {
+		fmt.Println("err",err)
+	}
+	defer rows.Close()
+	for rows.Next() {
+		repo := Transaction{}
+		err = rows.Scan(
+			&repo.ID,
+			&repo.Username,
+			&repo.TotalAmount,
+			&repo.PaymentStatus,
+			&repo.Showids,
+			&repo.Token,
+			&repo.TimeofDate,
+		)
+		if err != nil {
+			fmt.Println(err)
+		}
+		repos = append(repos, repo)
+	}
+	err = rows.Err()
+	if err != nil {
+			fmt.Println(err)
+	}
+	var Final []interface{}
+	
+	if len(repos)>0{
+		for _,value:=range repos{
+			CreateTemp:=make(map[string]interface{})
+			CreateTemp["Date"] = value.TimeofDate
+			CreateTemp["NumberofTickets"] = len(strings.Split(value.Showids,","))
+			CreateTemp["TotalAmount"] = value.TotalAmount
+			CreateTemp["Status"] = value.PaymentStatus
+			CreateTemp["Transactid"] = value.ID
+			Final = append(Final, CreateTemp)
+		} 
+	}
+
+	c.ResSuccess(w,Final, "SUCCESS")
+}
+
+
+func updateordertokennumber(code string){
+		rowsupdate, err2 := db.Query(`UPDATE shoppingcart SET  ordertoken='`+ code + `' WHERE ordertoken is null AND expired=false`)
+		if err2 != nil {
+			fmt.Println("ERROR2 ------ ",err2)
+		}
+		defer rowsupdate.Close()
+}
+
 func GetDailyShows(w http.ResponseWriter, r *http.Request){
 	c.SetupResponse(&w, r)
 	type Shows struct{
@@ -764,7 +1007,7 @@ func GetDailyShows(w http.ResponseWriter, r *http.Request){
 		bannerimg string
 		date time.Time
 	}
-//	Temporary()
+
 	time.LoadLocation("Asia/Calcutta")
 	PresentTime:=time.Now().Add(time.Minute *30)
 	FormattedTime:=strings.Split(PresentTime.Format("Mon Jan 02 2006 15:02:02 GMT+0530 (India Standard Time)"),"GMT")

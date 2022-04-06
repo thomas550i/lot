@@ -5,7 +5,9 @@ import EditProfile from "../views/EditProfile"
 import UpcomingShows from "../views/UpcomingShows"
 import SelectSlot from "../views/SelectSlot"
 import SelectNumber from "../views/SelectNumber"
+import Transaction from "../views/Transactions";
 import AuthLayout from "../layout/AuthLayout";
+import DashBoard from "../layout/DashBoard";
 
 Vue.use(Router)
 
@@ -42,6 +44,18 @@ export default new Router({
       path: '/edit',
       name: 'EditProfile',
       component: EditProfile
+    },
+    {
+      path: '/dashboard',
+      name: 'dashboard',
+      component: DashBoard,
+      children:[
+        {
+          path: '/Transaction',
+          name: 'Transaction',
+          component: Transaction,
+        },
+      ]
     },
   ]
 })

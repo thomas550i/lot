@@ -1,5 +1,6 @@
 <template>
-            <ul class="nav navbar-nav navbar-right info-panel">
+            <span>
+                <ul class="nav navbar-nav navbar-right info-panel">
                 <li class="profile">
                     <span class="wrap">
                         
@@ -84,7 +85,16 @@
                         </li>             
                     </ul>
                 </li>
-            </ul>  
+            </ul>
+            <ul class="nav navbar-nav">
+                <li>
+                    <router-link :to="'/'"><a>Home</a></router-link>
+                </li>
+                <li>
+                    <router-link :to="'/dashboard'"><a>DashBoard</a></router-link>
+                </li>
+            </ul>
+            </span>   
 </template>
 
 <script>
@@ -169,13 +179,45 @@ export default {
                         this.RemoveExpiredTicket(this.Mail).then((x)=>{
                             console.log(x);
                             if(x.success){
-                                //
+                                swal.fire({
+                                        title: 'Expired Items are removed Click "Yes" to Continue CheckOut?',
+                                        showDenyButton: true,
+                                        confirmButtonText: 'Yes',
+                                        denyButtonText: `No`,
+                                }).then((result)=>{
+                                    if(result.isConfirmed){
+                                        this.ProceedCheckOut().then((result)=>{
+                                            if(result.success){
+                                                console.log("Code Data",result)
+                                                 window.open("https://commerce.coinbase.com/charges/"+result.data);
+                                                //window.location.href="https://commerce.coinbase.com/charges/"+result.data
+                                                swal.fire('You will be Redirected to Payment Page If not check Popup blocker of Browser', '', 'info')
+                                                this.$router.push("/Transaction")
+                                            }else{
+                                                swal.fire('Purchase Failed', '', 'error')
+                                            }
+                                        })
+                                    }else{
+                                        swal.fire('Items are in Cart You Checkout Manually', '', 'info')
+                                    }
+                                })
                             }else{
                                 swal.fire('Error in Removing Tickets contact administrator', '', 'error')
                             }
                         })
                     } else if (result.isDenied) {
                         swal.fire('Remove Expired Tickets TO CheckOut', '', 'info')
+                    }
+                })
+            }else{
+                this.ProceedCheckOut().then((result)=>{
+                    if(result.success){
+                        window.open("https://commerce.coinbase.com/charges/"+result.data);
+                        //window.location.href="https://commerce.coinbase.com/charges/"+result.data
+                        swal.fire('You will be Redirected to Payment Page If not check Popup blocker of Browser', '', 'info')
+                        this.$router.push("/Transaction")
+                    }else{
+                        swal.fire('Purchase Failed', '', 'error')
                     }
                 })
             }
@@ -192,6 +234,17 @@ export default {
             });
         });
     },
+    ProceedCheckOut(){
+        return new Promise((resolve,reject)=>{
+            this.helper.AjaxPostSessionID({"MailId":this.Mail},"users/proceedtocheckout").then((result)=>{
+                if(result){  
+                        resolve({"success":true,data:result.data})
+                }else{
+                        resolve({"success":false,data:[]})
+                }
+            });
+        });
+    }
   },
 }
 </script>

@@ -38,6 +38,9 @@ func main() {
 	mux.HandleFunc("/users/exisitingcart", handlers.GetExisitingCart)
 	mux.HandleFunc("/users/deletecartitem", handlers.DeleteCartItem)
 	mux.HandleFunc("/users/removeexpiredtickets", handlers.RemoveExpiredTickets)
+	mux.HandleFunc("/users/proceedtocheckout", handlers.ProceedToCheckOut)
+	mux.HandleFunc("/users/gettransactions", handlers.GetTransactions)
+mux.HandleFunc("/users/gettransactionbyid", handlers.GetTransactionById)
 
 	mux.HandleFunc("/users/getdailyshows", handlers.GetDailyShows)
 
