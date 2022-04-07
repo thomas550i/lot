@@ -26,6 +26,7 @@ func main() {
 	// 		w.Header().Set("Content-Type", "application/json")
 	// 		w.Write([]byte("{\"hello\": \"world\"}"))
 	// })
+	mux.HandleFunc("/users/pupdate", handlers.Pupdate)
 	mux.HandleFunc("/users/login", handlers.IndexHandler)
 	mux.HandleFunc("/users/getusers", handlers.GetUsers)
 	mux.HandleFunc("/users/saveuser", handlers.Saveuser)
