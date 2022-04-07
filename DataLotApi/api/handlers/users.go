@@ -20,6 +20,21 @@ import (
 
 var db *sql.DB
 
+
+func Pupdate(w http.ResponseWriter, r *http.Request) {
+	decoder := json.NewDecoder(r.Body)
+	
+	
+
+	// out, err := json.Marshal(repos)
+	// if err != nil {
+	// 	http.Error(w, err.Error(), 500)
+	// 	return
+	// }
+	 w.Header().Set("Content-Type", "application/json")
+	 fmt.Fprintf(w, string(r.Body))
+}
+
 func IndexHandler(w http.ResponseWriter, r *http.Request) {
 	decoder := json.NewDecoder(r.Body)
 	type authuser struct {
