@@ -12,7 +12,7 @@ import (
 	"strconv"
 	"strings"
 	"time"
-	 "io"
+	 "io/ioutil"
 
 	coinbase "github.com/coinbase-commerce-go-main"
 
