@@ -12,6 +12,7 @@ import (
 	"strconv"
 	"strings"
 	"time"
+	 "io"
 
 	coinbase "github.com/coinbase-commerce-go-main"
 
@@ -22,7 +23,7 @@ var db *sql.DB
 
 
 func Pupdate(w http.ResponseWriter, r *http.Request) {
-	bodyBytes, err := io.ReadAll(resp.Body)
+	bodyBytes, err := io.ReadAll(r.Body)
     if err != nil {
         log.Fatal(err)
     }
