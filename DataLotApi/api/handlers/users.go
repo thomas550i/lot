@@ -28,7 +28,7 @@ func Pupdate(w http.ResponseWriter, r *http.Request) {
     }
     bodyString := string(bodyBytes)
 	 w.Header().Set("Content-Type", "application/json")
-	 fmt.fmtpri(w, bodyString)
+	 fmt.Fprintf(w, bodyString)
 }
 
 func IndexHandler(w http.ResponseWriter, r *http.Request) {
