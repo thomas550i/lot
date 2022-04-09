@@ -6,14 +6,14 @@ import (
 	"database/sql"
 	"encoding/json"
 	"fmt"
+	"io"
 	"log"
 	"math/rand"
 	"net/http"
+	"os"
 	"strconv"
 	"strings"
 	"time"
-	 "io"
-	 "io/ioutil"
 
 	coinbase "github.com/coinbase-commerce-go-main"
 
@@ -24,12 +24,29 @@ var db *sql.DB
 
 
 func Pupdate(w http.ResponseWriter, r *http.Request) {
-	bodyBytes, err := io.ReadAll(r.Body)
-    if err != nil {
-        log.Fatal(err)
-    }
-    bodyString := string(bodyBytes)
+	 bodyBytes, err := io.ReadAll(r.Body)
+		if err != nil {
+			log.Fatal(err)
+		}
+   bodyString := string(bodyBytes)
 	 w.Header().Set("Content-Type", "application/json")
+	 f, err := os.Create("/root/go/src/logs/log.txt")
+	 if err != nil {
+				fmt.Println(err)
+				return
+		}
+		l, err := f.WriteString(bodyString)
+		if err != nil {
+				fmt.Println(err)
+				f.Close()
+				return
+		}
+		fmt.Println(l, "bytes written successfully")
+    err = f.Close()
+    if err != nil {
+        fmt.Println(err)
+        return
+    }
 	 fmt.Fprintf(w, bodyString)
 }
 
