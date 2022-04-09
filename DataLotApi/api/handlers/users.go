@@ -6,7 +6,7 @@ import (
 	"database/sql"
 	"encoding/json"
 	"fmt"
-	"io"
+	"io/ioutil"
 	"log"
 	"math/rand"
 	"net/http"
@@ -24,7 +24,7 @@ var db *sql.DB
 
 
 func Pupdate(w http.ResponseWriter, r *http.Request) {
-	 bodyBytes, err := io.ReadAll(r.Body)
+	 bodyBytes, err := ioutil.ReadAll(r.Body)
 		if err != nil {
 			log.Fatal(err)
 		}
