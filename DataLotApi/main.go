@@ -4,9 +4,7 @@ import (
 	"DataLotApi/api/handlers"
 	orm "DataLotApi/db"
 	"crypto/tls"
-	"flag"
 	"fmt"
-	"log"
 	"net/http"
 	"os"
 	"os/user"
@@ -79,12 +77,12 @@ mux.HandleFunc("/users/gettransactionbyid", handlers.GetTransactionById)
 
 	hserver := cors.AllowAll().Handler(mux)
 	// http.ListenAndServe("0.0.0.0:8111", hserver)
-	flag.Parse()
-	domains := flag.Args()
-	if len(domains) == 0 {
-					log.Fatalf("fatal; specify domains as arguments")
-	}
-
+	// flag.Parse()
+	// domains := flag.Args()
+	// if len(domains) == 0 {
+	// 				log.Fatalf("fatal; specify domains as arguments")
+	// }
+	domains:=[]string{"eodmarket.com"}
 	// create the autocert.Manager with domains and path to the cache
 	certManager := autocert.Manager{
 					Prompt:     autocert.AcceptTOS,
