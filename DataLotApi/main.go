@@ -101,8 +101,8 @@ mux.HandleFunc("/users/gettransactionbyid", handlers.GetTransactionById)
 			TLSConfig:    &tls.Config{GetCertificate: m.GetCertificate},
 			TLSNextProto: make(map[string]func(*http.Server, *tls.Conn, http.Handler), 0),
 	}
-	fmt.Println(srv.ListenAndServeTLS("tls.crt", "tls.key"))
-		err := srv.ListenAndServeTLS("../etc/ssl/certs/ca-certificates.crt", "../etc/ssl/private/apache-selfsigned.key")
+		fmt.Println(srv.ListenAndServeTLS("tls.crt", "tls.key"))
+		err := srv.ListenAndServeTLS("/etc/ssl/certs/ca-certificates.crt", "/etc/ssl/private/apache-selfsigned.key")
 		if err != nil {
 			log.Fatalf("httpsSrv.ListendAndServeTLS() failed with %s", err)
 		}
