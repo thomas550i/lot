@@ -6,7 +6,6 @@ import (
 	"context"
 	"crypto/tls"
 	"fmt"
-	"log"
 	"net/http"
 
 	"github.com/crypto/acme/autocert"
@@ -102,7 +101,7 @@ mux.HandleFunc("/users/gettransactionbyid", handlers.GetTransactionById)
 	}
 	err := srv.ListenAndServeTLS("", "")
 	if err != nil {
-		log.Fatalf("httpsSrv.ListendAndServeTLS() failed with %s", err)
+		fmt.Println("httpsSrv.ListendAndServeTLS() failed with %s", err)
 	}
 	//log.Fatal(http.ListenAndServe("0.0.0.0:8111", nil))
 }
