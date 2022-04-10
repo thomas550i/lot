@@ -98,7 +98,6 @@ mux.HandleFunc("/users/gettransactionbyid", handlers.GetTransactionById)
 			Addr:         ":443",
 			Handler:      hserver,
 			TLSConfig:    &tls.Config{GetCertificate: m.GetCertificate},
-			TLSNextProto: make(map[string]func(*http.Server, *tls.Conn, http.Handler), 0),
 	}
 		// fmt.Println(srv.ListenAndServeTLS("tls.crt", "tls.key"))
 		err := srv.ListenAndServeTLS("", "")
