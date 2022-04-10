@@ -4,10 +4,8 @@ import (
 	"DataLotApi/api/handlers"
 	orm "DataLotApi/db"
 	"crypto/tls"
+	"fmt"
 	"net/http"
-	"os"
-	"os/user"
-	"path/filepath"
 
 	"github.com/crypto/acme/autocert"
 	cors "github.com/rs"
@@ -88,16 +86,19 @@ mux.HandleFunc("/users/gettransactionbyid", handlers.GetTransactionById)
 		},
 	}
 
-	go http.ListenAndServe(":80", certManager.HTTPHandler(nil))
-	server.ListenAndServeTLS("", "")
+	go http.ListenAndServe(":8111", certManager.HTTPHandler(nil))
+	err:=server.ListenAndServeTLS("", "")
+	if err!=nil{
+		fmt.Println("Error  ----- ",err)
+	}
 }
 
-func cacheDir() (dir string) {
-        if u, _ := user.Current(); u != nil {
-                dir = filepath.Join(os.TempDir(), "cache-golang-autocert-"+u.Username)
-                if err := os.MkdirAll(dir, 0700); err == nil {
-                        return dir
-                }
-        }
-        return ""
-}
+// func cacheDir() (dir string) {
+//         if u, _ := user.Current(); u != nil {
+//                 dir = filepath.Join(os.TempDir(), "cache-golang-autocert-"+u.Username)
+//                 if err := os.MkdirAll(dir, 0700); err == nil {
+//                         return dir
+//                 }
+//         }
+//         return ""
+// }
