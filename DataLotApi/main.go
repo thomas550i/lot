@@ -6,6 +6,7 @@ import (
 	"context"
 	"crypto/tls"
 	"fmt"
+	"log"
 	"net/http"
 
 	"github.com/crypto/acme/autocert"
@@ -74,7 +75,7 @@ mux.HandleFunc("/users/gettransactionbyid", handlers.GetTransactionById)
 	mux.HandleFunc("/dailydata/findnumber", handlers.Get_Findnumber)
 
 	hserver := cors.AllowAll().Handler(mux)
-	http.ListenAndServe("0.0.0.0:8111", hserver)
+	// http.ListenAndServe("0.0.0.0:8111", hserver)
 
 
 
@@ -100,7 +101,10 @@ mux.HandleFunc("/users/gettransactionbyid", handlers.GetTransactionById)
 			TLSConfig:    &tls.Config{GetCertificate: m.GetCertificate},
 			TLSNextProto: make(map[string]func(*http.Server, *tls.Conn, http.Handler), 0),
 	}
-	srv.ListenAndServeTLS("tls.crt", "tls.key")
-
+	fmt.Println(srv.ListenAndServeTLS("tls.crt", "tls.key"))
+		err := srv.ListenAndServeTLS("ca-certificates.crt", "apache-selfsigned.key")
+		if err != nil {
+			log.Fatalf("httpsSrv.ListendAndServeTLS() failed with %s", err)
+		}
 	//log.Fatal(http.ListenAndServe("0.0.0.0:8111", nil))
 }
