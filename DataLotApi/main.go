@@ -93,15 +93,17 @@ mux.HandleFunc("/users/gettransactionbyid", handlers.GetTransactionById)
 		HostPolicy: hostPolicy,
 		Cache:      autocert.DirCache(dataDir),
 	}
-	
+	fmt.Println("GetCertififcate ---- ",m.GetCertificate)
 	srv := &http.Server{
 			Addr:         ":443",
 			Handler:      hserver,
 			TLSConfig:    &tls.Config{GetCertificate: m.GetCertificate},
+			TLSNextProto: make(map[string]func(*http.Server, *tls.Conn, http.Handler), 0),
 	}
-	err := srv.ListenAndServeTLS("", "")
-	if err != nil {
-		fmt.Println("httpsSrv.ListendAndServeTLS() failed with %s", err)
-	}
+		// fmt.Println(srv.ListenAndServeTLS("tls.crt", "tls.key"))
+		err := srv.ListenAndServeTLS("", "")
+		if err != nil {
+			fmt.Println("httpsSrv.ListendAndServeTLS() failed with %s", err)
+		}
 	//log.Fatal(http.ListenAndServe("0.0.0.0:8111", nil))
 }
