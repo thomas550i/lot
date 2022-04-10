@@ -8,7 +8,7 @@ import (
 	"fmt"
 	"net/http"
 
-	"github.com/crypto-master/acme/autocert"
+	"github.com/crypto/acme/autocert"
 	cors "github.com/rs"
 
 	_ "github.com/lib/pq"
