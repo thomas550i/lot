@@ -3,6 +3,7 @@ package main
 import (
 	"DataLotApi/api/handlers"
 	orm "DataLotApi/db"
+	"context"
 	"crypto/tls"
 	"fmt"
 	"net/http"
@@ -19,7 +20,7 @@ import (
 func main() {
 	orm.InitDb()
 	defer orm.Close()
-	// var m *autocert.Manager
+	var m *autocert.Manager
 	mux := http.NewServeMux()
 	// mux.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
 	// 	w.Header().Set("Content-Type", "application/json")
@@ -76,37 +77,32 @@ mux.HandleFunc("/users/gettransactionbyid", handlers.GetTransactionById)
 	mux.HandleFunc("/dailydata/findnumber", handlers.Get_Findnumber)
 
 	hserver := cors.AllowAll().Handler(mux)
-	// http.ListenAndServe("0.0.0.0:8111", hserver)
-	// flag.Parse()
-	// domains := flag.Args()
-	// if len(domains) == 0 {
-	// 				log.Fatalf("fatal; specify domains as arguments")
-	// }
-	domains:=[]string{"eodmarket.com"}
-	// create the autocert.Manager with domains and path to the cache
-	certManager := autocert.Manager{
-					Prompt:     autocert.AcceptTOS,
-					HostPolicy: autocert.HostWhitelist(domains...),
+	hostPolicy := func(ctx context.Context, host string) error {
+		// Note: change to your real host
+		allowedHost := "eodmarket.com"
+		if host == allowedHost {
+			return nil
+		}
+		return fmt.Errorf("acme/autocert: only %s host is allowed", allowedHost)
 	}
 
-	// optionally use a cache dir
-	dir := cacheDir()
-	if dir != "" {
-					certManager.Cache = autocert.DirCache(dir)
+	dataDir := "."
+	m = &autocert.Manager{
+		Prompt:     autocert.AcceptTOS,
+		HostPolicy: hostPolicy,
+		Cache:      autocert.DirCache(dataDir),
 	}
-
-	// create the server itself
-	server := &http.Server{
-		Addr: ":https",
-		Handler:hserver,
-		TLSConfig: &tls.Config{
-						GetCertificate: certManager.GetCertificate,
-		},
+	fmt.Println("GetCertififcate ---- ",m.GetCertificate)
+	srv := &http.Server{
+			Addr:         ":443",
+			Handler:      hserver,
+			TLSConfig:    &tls.Config{GetCertificate: m.GetCertificate},
 	}
-	err:=server.ListenAndServeTLS("", "")
-	if err!=nil{
-		fmt.Println("ERROR MSG ------ ",err)
-	}
+		// fmt.Println(srv.ListenAndServeTLS("tls.crt", "tls.key"))
+		err := srv.ListenAndServeTLS("", "")
+		if err != nil {
+			fmt.Println("httpsSrv.ListendAndServeTLS() failed with %s", err)
+		}
 	
 }
 
