@@ -3,8 +3,12 @@ package main
 import (
 	"DataLotApi/api/handlers"
 	orm "DataLotApi/db"
+	"context"
+	"crypto/tls"
+	"fmt"
 	"net/http"
 
+	"github.com/crypto-master/acme/autocert"
 	cors "github.com/rs"
 
 	_ "github.com/lib/pq"
@@ -13,6 +17,7 @@ import (
 func main() {
 	orm.InitDb()
 	defer orm.Close()
+	var m *autocert.Manager
 	mux := http.NewServeMux()
 	// mux.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
 	// 	w.Header().Set("Content-Type", "application/json")
@@ -70,6 +75,32 @@ mux.HandleFunc("/users/gettransactionbyid", handlers.GetTransactionById)
 
 	hserver := cors.AllowAll().Handler(mux)
 	http.ListenAndServe("0.0.0.0:8111", hserver)
+
+
+
+	hostPolicy := func(ctx context.Context, host string) error {
+		// Note: change to your real host
+		allowedHost := "www.mydomain.com"
+		if host == allowedHost {
+			return nil
+		}
+		return fmt.Errorf("acme/autocert: only %s host is allowed", allowedHost)
+	}
+
+	dataDir := "."
+	m = &autocert.Manager{
+		Prompt:     autocert.AcceptTOS,
+		HostPolicy: hostPolicy,
+		Cache:      autocert.DirCache(dataDir),
+	}
+	
+	srv := &http.Server{
+			Addr:         ":443",
+			Handler:      hserver,
+			TLSConfig:    &tls.Config{GetCertificate: m.GetCertificate},
+			TLSNextProto: make(map[string]func(*http.Server, *tls.Conn, http.Handler), 0),
+	}
+	srv.ListenAndServeTLS("tls.crt", "tls.key")
 
 	//log.Fatal(http.ListenAndServe("0.0.0.0:8111", nil))
 }
