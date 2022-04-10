@@ -80,7 +80,7 @@ mux.HandleFunc("/users/gettransactionbyid", handlers.GetTransactionById)
 
 	hostPolicy := func(ctx context.Context, host string) error {
 		// Note: change to your real host
-		allowedHost := "www.mydomain.com"
+		allowedHost := "www.eodmarket.com"
 		if host == allowedHost {
 			return nil
 		}
