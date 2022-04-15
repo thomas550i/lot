@@ -6,6 +6,7 @@ import UpcomingShows from "../views/UpcomingShows"
 import SelectSlot from "../views/SelectSlot"
 import SelectNumber from "../views/SelectNumber"
 import Transaction from "../views/Transactions";
+import PurchaseTickets from "../views/PurchasedTickets";
 import AuthLayout from "../layout/AuthLayout";
 import DashBoard from "../layout/DashBoard";
 
@@ -54,6 +55,11 @@ export default new Router({
           path: '/Transaction',
           name: 'Transaction',
           component: Transaction,
+        },
+        {
+          path: '/PurchaseTickets',
+          name: 'PurchaseTickets',
+          component: PurchaseTickets,
         },
       ]
     },

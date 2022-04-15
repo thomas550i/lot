@@ -31,7 +31,7 @@
                                 <!-- Header & nav -->
                                 <div class="col-md-3">
                                     <div class="Images" >
-                                        <img width="85%"  height="70%" src="../../static/assets/img/maleicon.png">
+                                        <img width="85%"  height="70%">
                                     </div>
                                 </div>
                                 

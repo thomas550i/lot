@@ -15,8 +15,8 @@ import PMButton from "./components/PMButton";
 import VeeValidate from 'vee-validate'
 import PasswordMeter from "vue-simple-password-meter";
 import { library } from '@fortawesome/fontawesome-svg-core';
-import { faEye,faEyeSlash,faCircleMinus,faCirclePlus} from '@fortawesome/free-solid-svg-icons';
-library.add(faEye,faEyeSlash,faCircleMinus,faCirclePlus);
+import { faEye,faEyeSlash,faCircleMinus,faCirclePlus,faCrown} from '@fortawesome/free-solid-svg-icons';
+library.add(faEye,faEyeSlash,faCircleMinus,faCirclePlus,faCrown);
 import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome'
 Vue.use(VeeValidate);
 Vue.component("Password",PasswordMeter);

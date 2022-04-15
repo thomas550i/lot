@@ -6,7 +6,7 @@
           <thead> 
             <tr>
               <th scope="col">Date</th>
-              <th scope="col">PurchaseToken</th>
+              <th scope="col">Number of Tickets</th>
               <th scope="col">TotalAmount</th>
               <th scope="col">Status</th>
               <th scope="col">Action</th>
@@ -21,8 +21,8 @@
               <td>{{ListInside.Status}}</td>
               <td><button type="button" @click="ShowTableFunc(ListInside.Transactid)" class="btn btn-primary">View Shows</button></td>
             </tr>
-            <tr>
-              <td v-if="list.length==0" class="text-center" colspan="4">No Transaction To Show</td>
+            <tr style="height:200px;">
+              <td v-if="list.length==0" class="text-center" style="padding-top:75px;" colspan="4">No Transaction To Show</td>
             </tr>
           </tbody>
         </table>
@@ -36,6 +36,7 @@ export default {
   name:"Transaction",
   data(){
     return{
+      CallLoadTableFlag:false,
       Username:"",
       list:[
       ],
@@ -47,6 +48,7 @@ export default {
     this.LoadTable().then((x)=>{
       if(x.success){
         this.list = x.data
+        this.CallAgainLoadTable(x.data)
       }
     })
   },
@@ -117,8 +119,28 @@ export default {
         }
 
       })
+    },
+    CallAgainLoadTable(data){
+      let flagcount=false
+      if(data.length>0){
+        data.forEach((x)=>{
+          if(x.Status=="created"||x.Status=="pending"||x.Status=="delayed"){
+            flagcount=true
+          }
+        })
+        if(flagcount){
+          setTimeout(() => {
+              this.LoadTable().then((x)=>{
+                if(x.success){
+                  this.list = x.data
+                  this.CallAgainLoadTable(x.data)
+                }
+              })
+            }, 10000);
+        }
+      }
     }
-  }
+  },
 }
 </script>
 

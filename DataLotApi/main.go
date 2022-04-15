@@ -15,6 +15,7 @@ import (
 
 func main() {
 	orm.InitDb()
+	IsProduction:=true
 	defer orm.Close()
 //	var m *autocert.Manager
 	mux := http.NewServeMux()
@@ -45,7 +46,8 @@ func main() {
 	mux.HandleFunc("/users/removeexpiredtickets", handlers.RemoveExpiredTickets)
 	mux.HandleFunc("/users/proceedtocheckout", handlers.ProceedToCheckOut)
 	mux.HandleFunc("/users/gettransactions", handlers.GetTransactions)
-mux.HandleFunc("/users/gettransactionbyid", handlers.GetTransactionById)
+	mux.HandleFunc("/users/gettransactionbyid", handlers.GetTransactionById)
+	mux.HandleFunc("/users/getpurchasedtickets", handlers.GetPurchasedTickets)
 
 	mux.HandleFunc("/users/getdailyshows", handlers.GetDailyShows)
 
@@ -73,7 +75,8 @@ mux.HandleFunc("/users/gettransactionbyid", handlers.GetTransactionById)
 	mux.HandleFunc("/dailydata/findnumber", handlers.Get_Findnumber)
 
 	hserver := cors.AllowAll().Handler(mux)
-	certManager := autocert.Manager{
+	if IsProduction{
+		certManager := autocert.Manager{
 		Prompt: autocert.AcceptTOS,
 		Cache:  autocert.DirCache("certs"),
 	}
@@ -90,6 +93,9 @@ mux.HandleFunc("/users/gettransactionbyid", handlers.GetTransactionById)
 	err:=server.ListenAndServeTLS("", "")
 	if err!=nil{
 		fmt.Println("Error  ----- ",err)
+	}
+	}else{
+		http.ListenAndServe("0.0.0.0:8111", hserver)
 	}
 }
 

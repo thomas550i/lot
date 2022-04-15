@@ -6,7 +6,6 @@ import (
 	"database/sql"
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
 	"log"
 	"math/rand"
 	"net/http"
@@ -24,30 +23,253 @@ var db *sql.DB
 
 
 func Pupdate(w http.ResponseWriter, r *http.Request) {
-	 bodyBytes, err := ioutil.ReadAll(r.Body)
+	 var t interface{}
+	 decoder := json.NewDecoder(r.Body)
+	 err := decoder.Decode(&t)
+	 if err!=nil{
+		 c.ResFail(w, nil, "Not a valid Input")
+		 return
+	 }
+	 fmt.Println(t)
+	 switch t.(type){
+	 case map[string]interface{}:
+			GetEvent:=t.(map[string]interface{})["event"]
+			if Event,Check:=GetEvent.(map[string]interface{});Check{
+				if EventData,Check2:=Event["data"].(map[string]interface{});Check2{
+					Code:=EventData["code"].(string)
+					ResponseData:=fmt.Sprint(t)
+					Status:=""
+					switch Event["type"].(string){
+					case "charge:confirmed":
+						Status = "completed"
+						UpdatePaymentStatusFromWebHook(Code,Status,ResponseData)
+						//GenerateInvoice(Status,Code)
+					case "charge:pending":
+						Status = "pending"
+						UpdatePaymentStatusFromWebHook(Code,Status,ResponseData)
+					case "charge:delayed":
+						Status = "delayed"
+						UpdatePaymentStatusFromWebHook(Code,Status,ResponseData)
+					case "charge:failed":
+						Status = "failed"
+						//GenerateInvoice(Status,Code)
+						UpdatePaymentStatusFromWebHook(Code,Status,ResponseData)
+					case "charge:resolved":
+						Status = "resolved"
+						UpdatePaymentStatusFromWebHook(Code,Status,ResponseData)
+					}
+				}
+			}
+	 case interface{}:
+		f, err := os.Create("/root/go/src/logs/Errorlog"+time.Now().Local().String()+".txt")
 		if err != nil {
-			log.Fatal(err)
-		}
-   bodyString := string(bodyBytes)
-	 w.Header().Set("Content-Type", "application/json")
-	 f, err := os.Create("/root/go/src/logs/log.txt")
-	 if err != nil {
 				fmt.Println(err)
-				return
 		}
-		l, err := f.WriteString(bodyString)
+		l, err := f.WriteString(fmt.Sprint(t))
 		if err != nil {
 				fmt.Println(err)
 				f.Close()
-				return
 		}
 		fmt.Println(l, "bytes written successfully")
-    err = f.Close()
-    if err != nil {
-        fmt.Println(err)
-        return
-    }
-	 fmt.Fprintf(w, bodyString)
+		err = f.Close()
+		if err != nil {
+				fmt.Println(err)
+		}
+	 case nil:
+		f, err := os.Create("/root/go/src/logs/ErrorlogCodeEmpty"+time.Now().Local().String()+".txt")
+		if err != nil {
+				fmt.Println(err)
+		}
+		l, err := f.WriteString(fmt.Sprint(t))
+		if err != nil {
+				fmt.Println(err)
+				f.Close()
+		}
+		fmt.Println(l, "bytes written successfully")
+		err = f.Close()
+		if err != nil {
+				fmt.Println(err)
+		}
+	 }
+}
+
+
+func GetPurchasedTickets(w http.ResponseWriter, r *http.Request){
+	c.SetupResponse(&w, r)
+	type MailId struct{
+		MailId string
+	}
+	p:=MailId{}
+	decoder := json.NewDecoder(r.Body)
+	err := decoder.Decode(&p)
+	if err!=nil{
+		c.ResFail(w, nil, err.Error())
+		return
+	}
+	if !c.CheckSettionid(&w, r){
+		c.ResFail(w, nil, "SessionExpired")
+		return
+	}
+	type GetPurchasedTicket struct{
+		UserName string
+		ShowType string
+		Price string
+		ShowHours string
+		TimeShows string
+		TicketNumber string
+	}
+	repos := []GetPurchasedTicket{}
+	db = orm.Db()
+	rows, err := db.Query(`select username,showtype,price,ticketnumber,showhours,timeshows from shoppingcart where username='` + p.MailId + `' and paymentstatus='completed'`)
+	if err != nil {
+		fmt.Println("Error In InvoiceMail ------",err)
+	}
+	defer rows.Close()
+	for rows.Next() {
+		repo := GetPurchasedTicket{}
+		err = rows.Scan(
+			&repo.UserName,
+			&repo.ShowType,
+			&repo.Price,
+			&repo.TicketNumber,
+			&repo.ShowHours,
+			&repo.TimeShows,
+		)
+		if err != nil {
+			fmt.Println("Error Mesg in Invoice mail",err)
+		}
+		repos = append(repos, repo)
+	}
+	
+	err = rows.Err()
+	if err != nil {
+		fmt.Println("Error Msg in inovice Mail",err)
+	}
+	c.ResSuccess(w, repos, "")
+}
+
+func GenerateInvoice(Status string,Code string){
+	Body:=``
+	type UserTicketInfo struct{
+		UserName string
+		ShowType string
+		Price int
+		ShowHours string
+		TimeShows string
+		TicketNumber int
+	}
+	type TransactionDates struct{
+		TotalAmount int
+		UserName string
+		TimeofDate string
+
+	}
+	repos := []UserTicketInfo{}
+	db = orm.Db()
+	rows, err := db.Query(`select username,showtype,price,ticketnumber,showhours,timeshows from shoppingcart where ordertoken='` + Code + `'`)
+	if err != nil {
+		fmt.Println("Error In InvoiceMail ------",err)
+	}
+	defer rows.Close()
+	for rows.Next() {
+		repo := UserTicketInfo{}
+		err = rows.Scan(
+			&repo.UserName,
+			&repo.ShowType,
+			&repo.Price,
+			&repo.TicketNumber,
+			&repo.ShowHours,
+			&repo.TimeShows,
+
+		)
+		if err != nil {
+			fmt.Println("Error Mesg in Invoice mail",err)
+		}
+		repos = append(repos, repo)
+	}
+	
+	err = rows.Err()
+	if err != nil {
+		fmt.Println("Error Msg in inovice Mail",err)
+	}
+
+	TransactionDate := []TransactionDates{}
+	Transactrow, err := db.Query(`select totalamount,username,timeofdate from transactions where token='` + Code + `'`)
+	if err != nil {
+		fmt.Println("Error In InvoiceMail ------",err)
+	}
+	defer Transactrow.Close()
+	for Transactrow.Next() {
+		transactstruct := TransactionDates{}
+		err = Transactrow.Scan(
+			&transactstruct.TotalAmount,
+			&transactstruct.UserName,
+			&transactstruct.TimeofDate,
+		)
+		if err != nil {
+			fmt.Println("Error Mesg in Transactinvoice mail",err)
+		}
+		TransactionDate = append(TransactionDate, transactstruct)
+	}
+	
+	err = rows.Err()
+	if err != nil {
+		fmt.Println("Error Msg in Transactinvoice erro2 Mail",err)
+	}
+	Overall:=""
+	if Status=="completed"{
+		for _,value:=range repos{
+			Create:="<tr>"
+			Create+="<td>"+TransactionDate[0].TimeofDate+"</td><td>"+value.ShowType+"</td><td>"+value.TimeShows+"</td><td>"+value.ShowHours+"</td><td>"+fmt.Sprint(value.TicketNumber)+"</td><td>"+fmt.Sprint(value.Price)+"</td><td>"+"Completed"+"</td>"
+			Create+="</tr>"
+			Overall+=Create
+		}
+	}else if Status=="failed"{
+		for _,value:=range repos{
+			Create:="<tr>"
+			Create+="<td>"+TransactionDate[0].TimeofDate+"</td><td>"+value.ShowType+"</td><td>"+value.TimeShows+"</td><td>"+value.ShowHours+"</td><td>"+fmt.Sprint(value.TicketNumber)+"</td><td>"+fmt.Sprint(value.Price)+"</td><td>"+"Completed"+"</td>"
+			Create+="</tr>"
+			Overall+=Create
+		}
+	}
+	Body = `
+		<h2>Invoice From DataLot</h2>
+		<h4>Customer Mail Id:</h4>
+		<h6>Date of Invoice Generated:</h6>
+		<h5>List of Items</h5>
+		<table>
+			<thead>
+				<th>DateofPurchase</th>
+				<th>ShowType</th>
+				<th>TimeShows</th>
+				<th>ShowHours</th>
+				<th>TicketNumber</th>
+				<th>Price</th>
+				<th>PurchaseStatus</th>
+			</thead>
+			<tbody>`+Overall+
+				`
+				<td style="text-align: center;" colspan="6">TotalAmount</td><td>`+fmt.Sprint(TransactionDate[0].TotalAmount)+`</td>
+			</tbody>
+		</table>
+`
+	if Sendmail,errprs:=SendMailRegisterUser("thomas550i@gmail.com",TransactionDate[0].UserName,"DataLot Payment Invoice",Body,"");!Sendmail{
+		fmt.Println("SMTP ERROR",errprs)
+	}
+}
+
+func UpdatePaymentStatusFromWebHook(Code string,Status string,ResponseData string){
+	db = orm.Db()
+	transactrows, err := db.Query(`UPDATE transactions SET responsedata='`+ResponseData+`', paymentstatus='` + Status + `' WHERE token= '` + strings.TrimSpace(Code) + `';`)
+	if err != nil {
+		fmt.Println("Error in Transact ----",err)
+	}
+	defer transactrows.Close()
+	Shoppingrows, shoperr := db.Query(`UPDATE shoppingcart SET  paymentstatus='` + Status + `' WHERE ordertoken= '` + strings.TrimSpace(Code) + `';`)
+	if shoperr != nil {
+		fmt.Println("Error in Shoppingcart ----",shoperr)
+	}
+	defer Shoppingrows.Close()
 }
 
 func IndexHandler(w http.ResponseWriter, r *http.Request) {

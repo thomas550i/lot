@@ -8,6 +8,9 @@
           <li>
               <router-link :to="'/Transaction'"><a>Transaction</a></router-link>
           </li>
+          <li style="margin-top:20%;">
+              <router-link :to="'/PurchaseTickets'"><a>PurchasedTickets</a></router-link>
+          </li>
       </ul>
     </div>
     <div class="col-9 col-md-9">
