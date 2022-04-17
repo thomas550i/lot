@@ -34,7 +34,7 @@
                     </ul>
                 </div>
             </div>
-            <ul v-if="!isLogin" class="nav navbar-nav navbar-right info-panel">
+            <ul v-if="false" class="nav navbar-nav navbar-right info-panel">
                 <li class="profile">
                     <span class="wrap">
                         
@@ -116,44 +116,6 @@
                 </li>
             </ul> 
             <UserProfile v-if="isLogin"/>
-            <!-- <ul class="nav navbar-nav">
-                <li class="active">
-                    <a href="index.html">
-                        home
-                    </a>
-                </li>
-                <li>
-                    <a href="#" class="dropdown-toggle" data-toggle="dropdown">
-                        categories <i class="icofont icofont-curved-down"></i>
-                    </a>
-                    <ul class="dropdown-menu">
-                        <li><a href="#">Man line</a></li>
-                        <li><a href="#">Woman</a></li>
-                        <li><a href="#">Jewerly</a></li>
-                        <li><a href="#">Electronics</a></li>
-                        <li><a href="#">Clothes</a></li>
-                    </ul>
-                </li>
-                <li>
-                    <a href="index.html" class="dropdown-toggle" data-toggle="dropdown">
-                        new
-                    </a>
-                </li>
-                <li>
-                    <a href="#" class="dropdown-toggle" data-toggle="dropdown">
-                        pages <i class="icofont icofont-curved-down"></i>
-                    </a>
-                    <ul class="dropdown-menu">
-                        <li><a href="shop-list.html">Shop category</a></li>
-                        <li><a href="shop-item.html">Shop item</a></li>
-                        <li><a href="card-page-step-1.html">Shopping card. Step 1</a></li>
-                        <li><a href="card-page-step-2.html">Shopping card. Step 2</a></li>
-                        <li><a href="card-page-step-3.html">Shopping card. Step 3</a></li>
-                        <li><a href="register-page.html">Register page</a></li>
-                        <li><a href="blog-item.html">Item blog</a></li>
-                    </ul>
-                </li>
-            </ul> -->
         
         </div><!-- /.navbar-collapse -->
   </div><!-- /.container-fluid --> 
