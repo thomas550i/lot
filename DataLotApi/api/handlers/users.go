@@ -579,6 +579,7 @@ func LoginClientUser(w http.ResponseWriter, r *http.Request){
 				return
 			}
 			result["SessionID"] = sessionid
+			result["WalletAddress"] = repos[0].WalletAddress
 		}
 	}else{
 		Message = "Invalid Email or Password"
