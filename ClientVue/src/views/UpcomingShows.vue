@@ -89,44 +89,48 @@ export default {
   created(){
     console.log("change");
     this.getdailyshows().then((x)=>{
-      if(x.Data.length>0){
-        this.List=x.Data
-        this.temp = this.List
-    
-        if(this.List.length>0){
-          let count = 0,temporary=[];
-          for(let i=0;i<this.List.length;i++){
-            if(count==10){
-              count=0
-              if(temporary.length>0){
-                temporary.push({dot:i,active:false})
-              }else{
-                temporary.push({dot:i,active:true})
+      if(x.Data!=null){
+        if(x.Data.length>0){
+          this.List=x.Data
+          this.temp = this.List
+
+          if(this.List.length>0){
+            let count = 0,temporary=[];
+            for(let i=0;i<this.List.length;i++){
+              if(count==10){
+                count=0
+                if(temporary.length>0){
+                  temporary.push({dot:i,active:false})
+                }else{
+                  temporary.push({dot:i,active:true})
+                }
               }
+              count++
             }
-            count++
-          }
-          if(temporary.length>0){
-            temporary[0].active=true
-            this.Dot = temporary
+            if(temporary.length>0){
+              temporary[0].active=true
+              this.Dot = temporary
+            }else{
+              this.Dot[0].dot=this.List.length-1
+            }
+            this.end = this.Dot[0].dot
+            for(let i=this.begin;i<=this.end;i++){
+              this.List[i].display = true
+            }
+            this.dataformed=true;
           }else{
-            this.Dot[0].dot=this.List.length-1
+
+            this.dataformed = true
           }
-          this.end = this.Dot[0].dot
-          for(let i=this.begin;i<=this.end;i++){
-            this.List[i].display = true
-          }
-          this.dataformed=true;
         }else{
-          this.dataformed = true
+            this.dataformed = true
         }
+      }else{
+            this.dataformed = true
       }
     })
 
     
-  },
-  watch(){
-
   },
   methods:{
     next(){

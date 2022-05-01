@@ -70,6 +70,15 @@
                                                             </div>
                                                         </div>
                                                         <div class="form-group pd-none">
+                                                            <label for="WalletAddress" class="col-sm-3 control-label text-darkness">BitCoin WalletAddress</label>
+                                                            <div class="col-sm-8">
+                                                                <input type="text" id="WalletAddress" name="WalletAddress" v-model="WalletAddress" v-validate="'required'" :class="{'form-control': true, 'danger': errors.has('WalletAddress') }" placeholder="BitCoin WalletAddress">
+                                                            </div>
+                                                            <div v-show="errors.has('WalletAddress')" class="row text-danger text-center" style="font-size:small" >
+                                                                 {{"BitCoin WalletAddress is Required"}}
+                                                            </div>
+                                                        </div>
+                                                        <div class="form-group pd-none">
                                                             <label for="Genderid" class="col-sm-3 control-label text-darkness">Gender</label>
                                                             <div class="col-sm-8">
                                                                 <select v-model="Gender" class="form-select col-sm" v-validate="'required'" name="Genderid" id="Genderid">
@@ -135,6 +144,7 @@ export default {
       UserName:"",
       EmailID:"",
       Gender:"",
+      WalletAddress:"",
       Password:"",
       PasswordHide:true,
     };
@@ -146,6 +156,7 @@ export default {
         this.UserName = GetUserData.username;
         this.EmailID = GetUserData.email;
         this.Gender = GetUserData.gender;
+        this.WalletAddress = GetUserData.walletaddress
       }
   },
   methods:{
@@ -160,7 +171,7 @@ export default {
       })
     },
     save(){
-      let parameters={"FullName":this.UserName,"Email":this.EmailID,"Gender":this.Gender,"Password":btoa(this.Password)}
+      let parameters={"FullName":this.UserName,"Email":this.EmailID,"Gender":this.Gender,"Password":btoa(this.Password),"WalletAddress":this.WalletAddress}
       this.helper.AjaxPostSessionID(parameters,"users/edituserprofile",this).then((x)=>{
         if(x.status=="Success"){
           swal.fire({

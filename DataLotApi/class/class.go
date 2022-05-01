@@ -148,6 +148,7 @@ type ClientUsers struct{
 	Roalval   string
 	IsActive  string
 	Password  string
+	WalletAddress string
 }
 
 type Show struct {

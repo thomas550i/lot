@@ -15,7 +15,7 @@ import (
 
 func main() {
 	orm.InitDb()
-	IsProduction:=true
+	IsProduction:=false
 	defer orm.Close()
 //	var m *autocert.Manager
 	mux := http.NewServeMux()
@@ -45,6 +45,8 @@ func main() {
 	mux.HandleFunc("/users/deletecartitem", handlers.DeleteCartItem)
 	mux.HandleFunc("/users/removeexpiredtickets", handlers.RemoveExpiredTickets)
 	mux.HandleFunc("/users/proceedtocheckout", handlers.ProceedToCheckOut)
+	mux.HandleFunc("/users/cancelorder", handlers.Cancelorder)
+
 	mux.HandleFunc("/users/gettransactions", handlers.GetTransactions)
 	mux.HandleFunc("/users/gettransactionbyid", handlers.GetTransactionById)
 	mux.HandleFunc("/users/getpurchasedtickets", handlers.GetPurchasedTickets)

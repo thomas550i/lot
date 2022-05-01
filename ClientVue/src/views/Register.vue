@@ -89,7 +89,7 @@
 
 
                                                         <div class="form-group pd-none">
-                                                            <label for="lastNameid" class="col-sm-3 control-label text-darkness">Your Last name</label>
+                                                            <label for="lastNameid" class="col-sm-3 control-label text-darkness">Your Last Name</label>
                                                             <div class="col-sm-8">
                                                                 <input type="text" id="lastNameid" name="lastNameid"  v-model="LastName" v-validate="'required'" :class="{'form-control': true, 'danger': errors.has('lastNameid') }" placeholder="LastName">
                                                             </div>
@@ -98,12 +98,20 @@
                                                         
                                                         
                                                         <div class="form-group pd-none">
-                                                            <label for="emailidreg" class="col-sm-3 control-label text-darkness">Enter your email</label>
+                                                            <label for="emailidreg" class="col-sm-3 control-label text-darkness">Enter Your Email</label>
                                                             <div class="col-sm-8">
                                                                 <input type="email" name="emailidreg" v-model="Emailreg" v-validate="'required|email'" :class="{'form-control': true, 'danger': errors.has('emailidreg') }" placeholder="Enter your Email" id="emailidreg">
                                                             </div>
 
                                                             <div v-show="errors.has('emailidreg')" class="text-danger text-center" style="font-size:small">{{ "Email ID Must Be Valid" }} <br/></div>
+                                                        </div>
+                                                        <div class="form-group pd-none">
+                                                            <label for="walletaddress" class="col-sm-3 control-label text-darkness">BitCoin WalletAddress</label>
+                                                            <div class="col-sm-8">
+                                                                <input type="text" name="walletaddress" v-model="WalletAddress" v-validate="'required'" :class="{'form-control': true, 'danger': errors.has('walletaddress') }" placeholder="Enter BitCoin Wallet Address" id="walletaddress">
+                                                            </div>
+
+                                                            <div v-show="errors.has('walletaddress')" class="text-danger text-center" style="font-size:small">{{ "BitCoin Wallet Address Required" }} <br/></div>
                                                         </div>
                                                         <div class="form-group pd-none">
                                                             <label for="Genderid" class="col-sm-3 control-label text-darkness">Gender</label>
@@ -206,6 +214,7 @@ export default {
       OtpCreated:false,
       OtpValue:"",
       LastName:"",
+      WalletAddress:"",
       Emailreg: "",
       Gender:"",
       Passwordreg: "",
@@ -254,16 +263,22 @@ export default {
                     if(result){
                         CheckDuplicateMail(this.Emailreg).then((x)=>{
                             if(x.message!=undefined && x.message=="Email ID Already Exists"){
-                                this.SaveUserdata()
-                                console.log("PASSING INSIDE THE CHECKDUPLICATE MAIL")
-                            }else if(x.message!=undefined && x.message=="Already Exists but not Completed"){
-                                this.OtpCreated=true
-                            }else{
                                 swal.fire({
                                     icon: 'error',
                                     title: 'Email Duplicate',
                                     text: x.message,
                                 })
+                                console.log("PASSING INSIDE THE CHECKDUPLICATE MAIL")
+                            }else if(x.message!=undefined && x.message=="Already Exists but not Completed"){
+                                swal.fire({
+                                    icon: 'warning',
+                                    title: 'OTP MAIL',
+                                    text: x.message,
+                                }).then(()=>{
+                                    this.OtpCreated=true
+                                })
+                            }else{
+                                this.SaveUserdata()
                             }
                         })
                     }else{
@@ -286,6 +301,7 @@ export default {
                 "Firstname":this.FirstName,
                 "Lastname":this.LastName,
                 "Gender":this.Gender,
+                "WalletAddress":this.WalletAddress,
             };
             let Actionurl="users/saveclientuser"
             parameter.Password = btoa(parameter.Password)

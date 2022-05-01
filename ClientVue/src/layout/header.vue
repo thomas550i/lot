@@ -185,12 +185,8 @@
 
                                     <ul class="addon-login-btn">
                                         <li>
-                                            <router-link :to="{name:'home'}"><li><a>register</a></li></router-link>
+                                            <router-link :to="{name:'Register'}"><li @click="CloseModal()"><a>register</a></li></router-link>
                                             
-                                        </li>
-                                        <li>or</li>
-                                        <li>
-                                            <a href="#">restore password</a>
                                         </li>
                                     </ul>
                                 </form>
@@ -273,7 +269,7 @@ export default {
                             text: "Login Success",
                         });
                         this.isLogin = true
-                        this.helper.setUserinfo({username:x.Data.UserName,sessionid:x.Data.SessionID,email:x.Data.Email,gender:x.Data.Gender})
+                        this.helper.setUserinfo({username:x.Data.UserName,sessionid:x.Data.SessionID,email:x.Data.Email,gender:x.Data.Gender,walletaddress:x.Data.WalletAddress})
                         this.OTPcreated=false;
                         this.ShowDashBoard("/");
 
@@ -335,12 +331,25 @@ export default {
     ShowDashBoard(path){
         console.log("Savein Addcart")
         document.getElementById("modalclose").click();
+        this.CheckLogin();
         if(!this.helper.LoginFromAddCart){
             this.$router.push(path);
         }else{
             this.helper.SaveCart();
         }
     },
+    CloseModal(){
+        document.getElementById("modalclose").click();
+        
+    },
+    CheckLogin(){
+        let CheckLogin= this.helper.getuserinfo();
+        if(CheckLogin){
+            this.isLogin=true
+        }else{
+            this.isLogin=false
+        }
+    }
   },
 }
 </script>

@@ -253,7 +253,7 @@ func GenerateInvoice(Status string,Code string){
 			</tbody>
 		</table>
 `
-	if Sendmail,errprs:=SendMailRegisterUser("thomas550i@gmail.com",TransactionDate[0].UserName,"DataLot Payment Invoice",Body,"");!Sendmail{
+	if Sendmail,errprs:=SendMailRegisterUser("ubendranv91@gmail.com",TransactionDate[0].UserName,"DataLot Payment Invoice",Body,"");!Sendmail{
 		fmt.Println("SMTP ERROR",errprs)
 	}
 }
@@ -525,6 +525,7 @@ func LoginClientUser(w http.ResponseWriter, r *http.Request){
 		Password string
 		IsActive string
 		OTP string
+		WalletAddress string
 	} 
 	result:=make(map[string]interface{}) 
 	p := LoginUser{}
@@ -537,7 +538,7 @@ func LoginClientUser(w http.ResponseWriter, r *http.Request){
 	
 	repos:=[]LoginUser{}
 	db = orm.Db()
-	rows, err := db.Query(`select lastname,firstname,username,gender,mailtoken,isactive from users where username='` + p.UserName + `' and password='` + p.Password + `' `)
+	rows, err := db.Query(`select lastname,firstname,username,gender,mailtoken,isactive,walletaddress from users where username='` + p.UserName + `' and password='` + p.Password + `' `)
 	if err != nil {
 		return
 	}
@@ -551,6 +552,7 @@ func LoginClientUser(w http.ResponseWriter, r *http.Request){
 			&repo.Gender,
 			&repo.OTP,
 			&repo.IsActive,
+			&repo.WalletAddress,
 		)
 		if err != nil {
 			return
@@ -595,6 +597,7 @@ func EditUserProfile(w http.ResponseWriter, r *http.Request){
 		UserName string
 		FirstName string
 		LastName string
+		WalletAddress string
 	}
 	p:=EditUser{}
 	decoder := json.NewDecoder(r.Body)
@@ -612,7 +615,7 @@ func EditUserProfile(w http.ResponseWriter, r *http.Request){
 	// rows, err := db.Query(`select firstname,lastname from users where username='` + p.Email + `'`)
 	// if err != nil {
 	// 	c.ResFail(w, nil, err.Error())
-	// 	return
+	// 	returnloginclientuser
 	// }
 	// defer rows.Close()
 	// for rows.Next() {
@@ -651,7 +654,18 @@ func EditUserProfile(w http.ResponseWriter, r *http.Request){
 		}
 		defer rowsupdate.Close()
 	}else{
-		rowsupdate, err2 := db.Query(`UPDATE users SET firstname='`+ GetUserName[0] + `',lastname='`+ LastName + `',gender='`+ p.Gender + `',password='`+ p.Password + `' WHERE username = '` + p.Email + `';`)
+		if strings.TrimSpace(p.Password)!=""{
+			rowsupdate, err2 := db.Query(`UPDATE users SET firstname='`+ GetUserName[0] + `',lastname='`+ LastName + `',gender='`+ p.Gender + `',password='`+ p.Password + `' WHERE username = '` + p.Email + `';`)
+			if err2 != nil {
+				c.ResFail(w, nil, err2.Error())
+			return
+			}
+			defer rowsupdate.Close()
+		}
+	}
+
+	if strings.TrimSpace(p.WalletAddress)!=""{
+		rowsupdate, err2 := db.Query(`UPDATE users SET walletaddress='`+ p.WalletAddress + `' WHERE username = '` + p.Email + `';`)
 		if err2 != nil {
 			c.ResFail(w, nil, err2.Error())
 		return
@@ -986,6 +1000,30 @@ func CheckSessioninLoginTime(EmailID string)(int,error){
 }
 
 
+
+func Cancelorder(w http.ResponseWriter, r *http.Request){
+	c.SetupResponse(&w, r)
+	var Code interface{}
+	if len(strings.Split(r.URL.RawQuery,"="))>0{
+		Code = strings.Split(r.URL.RawQuery,"=")
+	}
+	if _,ok:=Code.([]string);ok{
+		db = orm.Db()
+		transactrows, err := db.Query(`UPDATE transactions SET responsedata='`+"UserCancelled"+`', paymentstatus='` + "cancelled" + `' WHERE ownnumber= '` + strings.TrimSpace(Code.([]string)[1]) + `';`)
+		if err != nil {
+			fmt.Println("Error in Transact ----",err)
+		}
+		defer transactrows.Close()
+		Shoppingrows, shoperr := db.Query(`UPDATE shoppingcart SET  paymentstatus='` + "cancelled" + `' WHERE ownnumber= '` + strings.TrimSpace(Code.([]string)[1]) + `';`)
+		if shoperr != nil {
+			fmt.Println("Error in Shoppingcart ----",shoperr)
+		}
+		defer Shoppingrows.Close()
+	}
+	http.Redirect(w,r,"http://localhost:8080/Transaction",http.StatusFound)
+}
+
+
 func ProceedToCheckOut(w http.ResponseWriter, r *http.Request){
 	c.SetupResponse(&w, r)	
 	type Proceed struct{
@@ -1049,17 +1087,20 @@ func ProceedToCheckOut(w http.ResponseWriter, r *http.Request){
 			}
 			TotalAmount+=float64(value.Price)
 		}
+		PresentTime:=time.Now().Format("2006-01-02 15:04:05")
+		fmt.Println(PresentTime)
+		FormatReferenceNumber:=fmt.Sprint(time.Now().Year())+fmt.Sprint(int(time.Now().Month()))+fmt.Sprint(time.Now().Day())+fmt.Sprint(time.Now().Hour())+fmt.Sprint(time.Now().Minute())+fmt.Sprint(time.Now().Second())
 		client := coinbase.Client("c91e3b19-00b6-473c-82f5-d3ed1ee6815a")
 		charge, err := client.Charge.Create(coinbase.ChargeParam{
 			Name:        "Buy Ticket",
 			Description: "Place Your Orders",
 			Local_price: coinbase.Money{
 				Amount:   fmt.Sprint(TotalAmount), //amount to be paid
-				Currency: "USD",
+				Currency: "BTC",
 			},
 			Pricing_type: "fixed_price",
-			Redirect_url: "http://localhost:8080/#/",   //success page
-			Cancel_url:   "http://localhost:8080/#/", //cancel page
+			Redirect_url: "http://localhost:8111/users/cancelorder?Code="+FormatReferenceNumber,   //success page
+			Cancel_url:   "http://localhost:8111/users/cancelorder?Code="+FormatReferenceNumber, //cancel page
 		})
 		if err!=nil{
 			fmt.Println("Error ----- ",err)
@@ -1068,10 +1109,9 @@ func ProceedToCheckOut(w http.ResponseWriter, r *http.Request){
 				if Datavalue,ok:=value["data"].(map[string]interface{});ok{
 					code = Datavalue["code"].(string)
 				}
-				PresentTime:=time.Now().Format("2006-01-02 15:04:05")
-				fmt.Println(PresentTime)
-				rows, err := db.Query(`INSERT INTO transactions (username, token, totalamount, responsedata, paymentstatus, showids,timeofdate)
-				VALUES ('` + p.MailId + `', '` + code + `', '` + fmt.Sprint(TotalAmount) + `', '` + fmt.Sprint(charge) + `', '`+"created"+`', '` + showids + `', '` + PresentTime + `');`)
+				fmt.Println(FormatReferenceNumber)
+				rows, err := db.Query(`INSERT INTO transactions (username, token, totalamount, responsedata, paymentstatus, showids,timeofdate,ownnumber)
+				VALUES ('` + p.MailId + `', '` + code + `', '` + fmt.Sprint(TotalAmount) + `', '` + fmt.Sprint(charge) + `', '`+"created"+`', '` + showids + `', '` + PresentTime + `','`+FormatReferenceNumber+`');`)
 				if err != nil {
 					fmt.Println("Errors ----- ",err)
 					c.ResFail(w, nil, "Error in Backend")
@@ -1333,13 +1373,13 @@ func SaveClientUser(w http.ResponseWriter, r *http.Request){
 	<h4>Welcome to DataLot `+p.Firstname +""+p.Lastname +` Your Token Number <h1>`+Simpletoken+`<h1> Enjoy Datalot !<h4>`
 	
 	if p.Username!=""{
-		if Sendmail,errprs:=SendMailRegisterUser("thomas550i@gmail.com",p.Username,"Welcome To DATALOT",MailBody,"");!Sendmail{
+		if Sendmail,errprs:=SendMailRegisterUser("ubendranv91@gmail.com",p.Username,"Welcome To DATALOT",MailBody,"");!Sendmail{
 			fmt.Println("SMTP ERROR",errprs)
 			c.ResFail(w, nil, "FAILED IN SMTP TO SEND MAIL")
 			return	
 		}
-		rows, err := db.Query(`INSERT INTO users (firstname, lastname, username, gender, roalid, Password,IsActive,mailtoken)
-		VALUES ('` + p.Firstname + `', '` + p.Lastname + `', '` + p.Username + `', '` + p.Gender + `', '`+"4"+`', '` + p.Password + `','` + "0" + `','` + Simpletoken + `');`)
+		rows, err := db.Query(`INSERT INTO users (firstname, lastname, username, gender, roalid, Password,IsActive,mailtoken,walletaddress)
+		VALUES ('` + p.Firstname + `', '` + p.Lastname + `', '` + p.Username + `', '` + p.Gender + `', '`+"4"+`', '` + p.Password + `','` + "0" + `','` + Simpletoken + `','`+p.WalletAddress+`');`)
 		if err != nil {
 			return
 		}
@@ -1350,7 +1390,7 @@ func SaveClientUser(w http.ResponseWriter, r *http.Request){
 
 func SendMailRegisterUser(FromMail string,ToMail string,Subject string,MailBodys string,AttachPath string)(bool,error){
 	MailSendFlag:=true
-	MailConnection := gomail.NewDialer("smtp-relay.sendinblue.com", 587, "thomas550i@gmail.com", "RFU1JwAKjOSEbQBy")
+	MailConnection := gomail.NewDialer("smtp-relay.sendinblue.com", 587, "ubendranv91@gmail.com", "Wqs25ZtjRzahBSQN")
 	m := gomail.NewMessage()
 	m.SetHeader("From",FromMail)
 	m.SetHeader("To", ToMail)
